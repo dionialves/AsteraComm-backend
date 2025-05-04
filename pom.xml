@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.dionialves</groupId>
-	<artifactId>AsteraConnect </artifactId>
+	<artifactId>AsteraComm</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>AsteraConnect </name>
+	<name>AsteraComm</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
