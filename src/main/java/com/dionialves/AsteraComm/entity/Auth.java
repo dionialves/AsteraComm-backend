@@ -1,4 +1,4 @@
-package com.dionialves.AsteraConnect.entity;
+package com.dionialves.AsteraComm.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

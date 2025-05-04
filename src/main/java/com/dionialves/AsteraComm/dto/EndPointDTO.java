@@ -1,4 +1,4 @@
-package com.dionialves.AsteraConnect.dto;
+package com.dionialves.AsteraComm.dto;
 
 import java.util.Objects;
 

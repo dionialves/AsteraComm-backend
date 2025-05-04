@@ -1,7 +1,7 @@
-package com.dionialves.AsteraConnect.controller;
+package com.dionialves.AsteraComm.controller;
 
-import com.dionialves.AsteraConnect.dto.EndPointDTO;
-import com.dionialves.AsteraConnect.repository.EndPointRepository;
+import com.dionialves.AsteraComm.dto.EndPointDTO;
+import com.dionialves.AsteraComm.repository.EndPointRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
