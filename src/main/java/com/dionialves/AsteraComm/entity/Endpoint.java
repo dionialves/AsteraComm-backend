@@ -6,7 +6,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "ps_endpoints")
-public class EndPoint {
+public class Endpoint {
 
     @Id
     @Column(name = "id")
@@ -18,9 +18,9 @@ public class EndPoint {
 
     private String callerid;
 
-    public EndPoint() {}
+    public Endpoint() {}
 
-    public EndPoint(String id, Auth auth, String callerid) {
+    public Endpoint(String id, Auth auth, String callerid) {
         this.id = id;
         this.auth = auth;
         this.callerid = callerid;
@@ -53,7 +53,7 @@ public class EndPoint {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        EndPoint endpoint = (EndPoint) o;
+        Endpoint endpoint = (Endpoint) o;
         return Objects.equals(id, endpoint.id);
     }
 

@@ -2,20 +2,33 @@ package com.dionialves.AsteraComm.dto;
 
 import java.util.Objects;
 
-public class EndPointDTO {
+public class EndpointDTO {
     private String id;
     private String callerid;
     private String username;
     private String password;
+    private String ip;
+    private String rtt;
+    private Boolean online;
 
-    public EndPointDTO() {
+    public EndpointDTO() {
     }
 
-    public EndPointDTO(String id, String callerid, String username, String password) {
+    public EndpointDTO(String id, String callerid, String username, String password) {
         this.id = id;
         this.callerid = callerid;
         this.username = username;
         this.password = password;
+    }
+
+    public EndpointDTO(String id, String callerid, String username, String password, String ip, String rtt, Boolean online) {
+        this.id = id;
+        this.callerid = callerid;
+        this.username = username;
+        this.password = password;
+        this.ip = ip;
+        this.rtt = rtt;
+        this.online = online;
     }
 
     public String getId() {
@@ -50,10 +63,34 @@ public class EndPointDTO {
         this.password = password;
     }
 
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getRtt() {
+        return rtt;
+    }
+
+    public void setRtt(String rtt) {
+        this.rtt = rtt;
+    }
+
+    public Boolean getOnline() {
+        return online;
+    }
+
+    public void setOnline(Boolean online) {
+        this.online = online;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        EndPointDTO that = (EndPointDTO) o;
+        EndpointDTO that = (EndpointDTO) o;
         return Objects.equals(id, that.id) && Objects.equals(callerid, that.callerid) && Objects.equals(username, that.username) && Objects.equals(password, that.password);
     }
 

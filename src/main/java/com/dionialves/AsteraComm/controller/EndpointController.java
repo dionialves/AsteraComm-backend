@@ -1,7 +1,7 @@
 package com.dionialves.AsteraComm.controller;
 
-import com.dionialves.AsteraComm.dto.EndPointDTO;
-import com.dionialves.AsteraComm.repository.EndPointRepository;
+import com.dionialves.AsteraComm.dto.EndpointDTO;
+import com.dionialves.AsteraComm.repository.EndpointRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,13 +13,13 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/circuits")
-public class EndPointController {
+public class EndpointController {
 
     @Autowired
-    private EndPointRepository endPointRepository;
+    private EndpointRepository endPointRepository;
 
     @GetMapping
-    public List<EndPointDTO> getAllCircuits() {
+    public List<EndpointDTO> getAllCircuits() {
         return endPointRepository.getRepositoryDTO();
     }
 }
