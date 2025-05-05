@@ -2,6 +2,7 @@ package com.dionialves.AsteraComm.controller;
 
 import com.dionialves.AsteraComm.dto.EndpointDTO;
 import com.dionialves.AsteraComm.repository.EndpointRepository;
+import com.dionialves.AsteraComm.service.EndpointService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +17,11 @@ import java.util.List;
 public class EndpointController {
 
     @Autowired
-    private EndpointRepository endPointRepository;
+    private EndpointService endpointService;
 
     @GetMapping
-    public List<EndpointDTO> getAllCircuits() {
-        return endPointRepository.getRepositoryDTO();
+    public List<EndpointDTO> getEndpoints() {
+        return endpointService.getAllEndpointData();
     }
+
 }
