@@ -16,7 +16,7 @@ public class EndpointStatusService {
 
         try {
             Process process = Runtime.getRuntime().exec(new String[] {
-                    "sudo", "asterisk", "-rx", "pjsip show contacts"
+                    "docker", "exec", "asterisk", "asterisk", "-rx", "pjsip show contacts"
             });
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
