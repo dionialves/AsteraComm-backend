@@ -40,11 +40,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.github.cdimascio</groupId>
-			<artifactId>dotenv-java</artifactId>
-			<version>3.0.0</version>
-		</dependency>
-		<dependency>
 			<groupId>com.jcraft</groupId>
 			<artifactId>jsch</artifactId>
 			<version>0.1.55</version>
@@ -58,7 +53,12 @@
 			<artifactId>postgresql</artifactId>
 			<version>42.7.3</version>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.asteriskjava</groupId>
+            <artifactId>asterisk-java</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

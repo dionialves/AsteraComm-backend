@@ -1,27 +1,45 @@
 package com.dionialves.AsteraComm.service;
 
 import com.dionialves.AsteraComm.entity.EndpointStatus;
+
+import org.asteriskjava.manager.ManagerConnection;
+import org.asteriskjava.manager.ManagerConnectionFactory;
+import org.asteriskjava.manager.action.CommandAction;
+import org.asteriskjava.manager.response.CommandResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
 public class EndpointStatusService {
 
+    @Value("${asterisk.hostname}")
+    private String hostname;
+
+    @Value("${asterisk.port}")
+    private int port;
+
+    @Value("${asterisk.username}")
+    private String username;
+
+    @Value("${asterisk.password}")
+    private String password;
+
     public Map<String, EndpointStatus> getStatusFromAsterisk() {
         Map<String, EndpointStatus> statusMap = new HashMap<>();
 
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] {
-                    "docker", "exec", "asterisk", "asterisk", "-rx", "pjsip show contacts"
-            });
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
+        ManagerConnectionFactory factory = new ManagerConnectionFactory(hostname, port, username, password);
+        ManagerConnection connection = factory.createManagerConnection();
 
-            while ((line = reader.readLine()) != null) {
+        try {
+            connection.login();
+
+            CommandAction action = new CommandAction("pjsip show contacts");
+            CommandResponse response = (CommandResponse) connection.sendAction(action);
+
+            for (String line : response.getResult()) {
 
                 if (line.contains("Avail") & line.contains("@")) {
 
@@ -34,8 +52,9 @@ public class EndpointStatusService {
                     statusMap.put(endpoint, new EndpointStatus(true, ip, rtt));
 
                 }
+
             }
-            process.waitFor();
+            connection.logoff();
         } catch (Exception e) {
             e.printStackTrace();
         }
