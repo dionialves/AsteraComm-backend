@@ -1,16 +1,19 @@
 package com.dionialves.AsteraComm.service;
 
+import com.dionialves.AsteraComm.entity.Endpoint;
 import com.dionialves.AsteraComm.entity.EndpointStatus;
+import com.dionialves.AsteraComm.factory.EndpointFactory;
+import com.dionialves.AsteraComm.repository.EndpointRepository;
+import com.dionialves.AsteraComm.repository.EndpointStatusRepository;
 
 import org.asteriskjava.manager.ManagerConnection;
 import org.asteriskjava.manager.ManagerConnectionFactory;
 import org.asteriskjava.manager.action.CommandAction;
 import org.asteriskjava.manager.response.CommandResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class EndpointStatusService {
@@ -27,8 +30,17 @@ public class EndpointStatusService {
     @Value("${asterisk.password}")
     private String password;
 
-    public Map<String, EndpointStatus> getStatusFromAsterisk() {
-        Map<String, EndpointStatus> statusMap = new HashMap<>();
+    private final EndpointFactory endpointFactory;
+    private final EndpointStatusRepository endpointStatusRepository;
+
+    @Autowired
+    public EndpointStatusService(EndpointFactory endpointFactory, EndpointStatusRepository endpointStatusRepository) {
+        this.endpointFactory = endpointFactory;
+        this.endpointStatusRepository = endpointStatusRepository;
+    }
+
+    @Scheduled(fixedRateString = "${asterisk.status.interval.ms}")
+    public void getStatusFromAsterisk() {
 
         ManagerConnectionFactory factory = new ManagerConnectionFactory(hostname, port, username, password);
         ManagerConnection connection = factory.createManagerConnection();
@@ -45,12 +57,13 @@ public class EndpointStatusService {
 
                     String[] parts = line.trim().split("\\s+");
 
-                    String endpoint = parts[1].split("/")[0];
+                    String endpointId = parts[1].split("/")[0];
                     String ip = parts[1].split("/")[1].split("@")[1].split(":")[0];
                     String rtt = parts[parts.length - 1];
 
-                    statusMap.put(endpoint, new EndpointStatus(true, ip, rtt));
-
+                    Endpoint endpoint = endpointFactory.getById(endpointId);
+                    EndpointStatus endpointStatus = new EndpointStatus(endpoint, true, ip, rtt);
+                    endpointStatusRepository.save(endpointStatus);
                 }
 
             }
@@ -58,6 +71,5 @@ public class EndpointStatusService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return statusMap;
     }
 }

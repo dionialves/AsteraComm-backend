@@ -20,6 +20,9 @@ public class EndpointService {
     private EndpointStatusService endpointStatusService;
 
     public List<EndpointDTO> getAllEndpointData() {
+        List<EndpointDTO> result = new ArrayList<>();
+
+        /**
         Map<String, EndpointStatus> liveStatus = endpointStatusService.getStatusFromAsterisk();
         List<EndpointDTO> endpointsDTO = endpointRepository.getRepositoryDTO();
 
@@ -43,6 +46,8 @@ public class EndpointService {
             }
             result.add(info);
         }
+        return result;
+         **/
         return result;
     }
 }

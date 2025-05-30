@@ -2,7 +2,11 @@ package com.dionialves.AsteraComm.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -14,10 +18,15 @@ public class EndpointStatus {
 
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @ManyToOne
+    @JoinColumn(name = "endpoint", referencedColumnName = "id")
+    private Endpoint endpoint;
+
     private boolean online;
-    
+
     private String ip;
     private String rtt;
 
@@ -27,14 +36,17 @@ public class EndpointStatus {
     public EndpointStatus() {
     }
 
-    public EndpointStatus(boolean online, String ip, String rtt) {
+    public EndpointStatus(Endpoint endpoint, boolean online, String ip, String rtt) {
+        this.endpoint = endpoint;
         this.online = online;
         this.ip = ip;
         this.rtt = rtt;
     }
 
-    public EndpointStatus(Integer id, boolean online, String ip, String rtt, LocalDateTime checkedAt) {
+    public EndpointStatus(Integer id, Endpoint endpoint, boolean online, String ip, String rtt,
+            LocalDateTime checkedAt) {
         this.id = id;
+        this.endpoint = endpoint;
         this.online = online;
         this.ip = ip;
         this.rtt = rtt;
@@ -83,9 +95,11 @@ public class EndpointStatus {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass())
+            return false;
         EndpointStatus that = (EndpointStatus) o;
-        return online == that.online && Objects.equals(id, that.id) && Objects.equals(ip, that.ip) && Objects.equals(rtt, that.rtt);
+        return online == that.online && Objects.equals(id, that.id) && Objects.equals(ip, that.ip)
+                && Objects.equals(rtt, that.rtt);
     }
 
     @Override
