@@ -6,6 +6,8 @@ import com.dionialves.AsteraComm.factory.EndpointFactory;
 import com.dionialves.AsteraComm.repository.EndpointRepository;
 import com.dionialves.AsteraComm.repository.EndpointStatusRepository;
 
+import java.time.LocalDateTime;
+
 import org.asteriskjava.manager.ManagerConnection;
 import org.asteriskjava.manager.ManagerConnectionFactory;
 import org.asteriskjava.manager.action.CommandAction;
@@ -53,7 +55,7 @@ public class EndpointStatusService {
 
             for (String line : response.getResult()) {
 
-                if (line.contains("Avail") & line.contains("@")) {
+                if (line.contains("@")) {
 
                     String[] parts = line.trim().split("\\s+");
 
@@ -61,9 +63,18 @@ public class EndpointStatusService {
                     String ip = parts[1].split("/")[1].split("@")[1].split(":")[0];
                     String rtt = parts[parts.length - 1];
 
+                    LocalDateTime now = LocalDateTime.now();
+
+                    // Aqui eu preciso verificar qual o ultimo status desse endpoint, se for
+                    // diferente
+                    // do atual, no caso desse que estamos avaliando, entao deve salvar esse
+                    // registro
+                    // no banco. Caso contrario nao deve salvar
+
                     Endpoint endpoint = endpointFactory.getById(endpointId);
-                    EndpointStatus endpointStatus = new EndpointStatus(endpoint, true, ip, rtt);
+                    EndpointStatus endpointStatus = new EndpointStatus(endpoint, true, ip, rtt, now);
                     endpointStatusRepository.save(endpointStatus);
+
                 }
 
             }

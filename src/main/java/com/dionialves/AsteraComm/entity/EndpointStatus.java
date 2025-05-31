@@ -36,16 +36,7 @@ public class EndpointStatus {
     public EndpointStatus() {
     }
 
-    public EndpointStatus(Endpoint endpoint, boolean online, String ip, String rtt) {
-        this.endpoint = endpoint;
-        this.online = online;
-        this.ip = ip;
-        this.rtt = rtt;
-    }
-
-    public EndpointStatus(Integer id, Endpoint endpoint, boolean online, String ip, String rtt,
-            LocalDateTime checkedAt) {
-        this.id = id;
+    public EndpointStatus(Endpoint endpoint, boolean online, String ip, String rtt, LocalDateTime checkedAt) {
         this.endpoint = endpoint;
         this.online = online;
         this.ip = ip;
