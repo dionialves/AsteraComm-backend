@@ -3,7 +3,6 @@ package com.dionialves.AsteraComm.service;
 import com.dionialves.AsteraComm.entity.Endpoint;
 import com.dionialves.AsteraComm.entity.EndpointStatus;
 import com.dionialves.AsteraComm.factory.EndpointFactory;
-import com.dionialves.AsteraComm.repository.EndpointRepository;
 import com.dionialves.AsteraComm.repository.EndpointStatusRepository;
 
 import java.time.LocalDateTime;
@@ -59,24 +58,19 @@ public class EndpointStatusService {
 
                     String[] parts = line.trim().split("\\s+");
 
+                    boolean status = line.contains("Avail");
+
                     String endpointId = parts[1].split("/")[0];
                     String ip = parts[1].split("/")[1].split("@")[1].split(":")[0];
                     String rtt = parts[parts.length - 1];
 
                     LocalDateTime now = LocalDateTime.now();
 
-                    // Aqui eu preciso verificar qual o ultimo status desse endpoint, se for
-                    // diferente
-                    // do atual, no caso desse que estamos avaliando, entao deve salvar esse
-                    // registro
-                    // no banco. Caso contrario nao deve salvar
-
                     Endpoint endpoint = endpointFactory.getById(endpointId);
-                    EndpointStatus endpointStatus = new EndpointStatus(endpoint, true, ip, rtt, now);
+
+                    EndpointStatus endpointStatus = new EndpointStatus(endpoint, status, ip, rtt, now);
                     endpointStatusRepository.save(endpointStatus);
-
                 }
-
             }
             connection.logoff();
         } catch (Exception e) {
