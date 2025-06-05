@@ -1,10 +1,6 @@
 package com.dionialves.AsteraComm.service;
 
 import com.dionialves.AsteraComm.dto.EndpointDTO;
-import com.dionialves.AsteraComm.entity.Endpoint;
-import com.dionialves.AsteraComm.entity.EndpointStatus;
-import com.dionialves.AsteraComm.factory.EndpointFactory;
-import com.dionialves.AsteraComm.factory.EndpointStatusFactory;
 import com.dionialves.AsteraComm.repository.EndpointRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
