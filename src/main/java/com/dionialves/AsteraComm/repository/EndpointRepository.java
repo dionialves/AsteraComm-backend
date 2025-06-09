@@ -15,8 +15,8 @@ public interface EndpointRepository extends JpaRepository<Endpoint, String> {
                     e.callerid,
                     a.username,
                     a.password,
-                    s.rtt,
                     s.ip,
+                    s.rtt,
                     CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online
                 FROM ps_endpoints e
                 JOIN ps_auths a ON a.id = e.id

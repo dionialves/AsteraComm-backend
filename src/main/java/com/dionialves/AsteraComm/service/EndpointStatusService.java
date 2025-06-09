@@ -82,7 +82,7 @@ public class EndpointStatusService {
 
         for (String line : response) {
 
-            if (line.contains("@"))
+            if (!line.contains("@"))
                 continue;
 
             try {
