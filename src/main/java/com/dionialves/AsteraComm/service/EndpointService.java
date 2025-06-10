@@ -14,7 +14,7 @@ public class EndpointService {
     @Autowired
     private EndpointRepository endpointRepository;
 
-    public Page<EndpointProjection> getAllEndpointData(Pageable pageable) {
-        return endpointRepository.findAllEndpoint(pageable);
+    public Page<EndpointProjection> getAllEndpointData(String search, Pageable pageable) {
+        return endpointRepository.findAllEndpoint(search, pageable);
     }
 }

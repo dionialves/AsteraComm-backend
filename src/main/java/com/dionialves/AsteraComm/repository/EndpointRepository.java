@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface EndpointRepository extends JpaRepository<Endpoint, String> {
     @Query(value = """
@@ -25,8 +26,23 @@ public interface EndpointRepository extends JpaRepository<Endpoint, String> {
                 FROM asteracomm_endpoint_status_history s2
                 WHERE s2.endpoint = e.id
             )
-            """, countQuery = "SELECT COUNT(*) FROM ps_endpoints e JOIN ps_auths a ON a.id = e.id", nativeQuery = true)
+            WHERE LOWER(e.callerid) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
+            """, countQuery = """
+            SELECT COUNT(*)
+            FROM ps_endpoints e
+            JOIN ps_auths a ON a.id = e.id
+            LEFT JOIN asteracomm_endpoint_status_history s ON s.id = (
+                SELECT MAX(s2.id)
+                FROM asteracomm_endpoint_status_history s2
+                WHERE s2.endpoint = e.id
+            )
+            WHERE LOWER(e.callerid) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
+            """, nativeQuery = true)
 
-    Page<EndpointProjection> findAllEndpoint(Pageable pageable);
+    Page<EndpointProjection> findAllEndpoint(@Param("search") String search, Pageable pageable);
 
 }
