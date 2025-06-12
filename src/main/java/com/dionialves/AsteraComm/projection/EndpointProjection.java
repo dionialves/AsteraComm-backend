@@ -11,7 +11,7 @@ public interface EndpointProjection {
 
     String getIp();
 
-    Double getRtt();
+    String getRtt();
 
     Boolean getOnline();
 }
