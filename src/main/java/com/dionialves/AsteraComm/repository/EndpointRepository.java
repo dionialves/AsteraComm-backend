@@ -24,7 +24,7 @@ public interface EndpointRepository extends JpaRepository<Endpoint, String> {
             LEFT JOIN asteracomm_endpoint_status_history s ON s.id = (
                 SELECT MAX(s2.id)
                 FROM asteracomm_endpoint_status_history s2
-                WHERE s2.endpoint = e.id
+                WHERE online = true and s2.endpoint = e.id
             )
             WHERE LOWER(e.callerid) LIKE LOWER(CONCAT('%', :search, '%'))
                 OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -36,7 +36,7 @@ public interface EndpointRepository extends JpaRepository<Endpoint, String> {
             LEFT JOIN asteracomm_endpoint_status_history s ON s.id = (
                 SELECT MAX(s2.id)
                 FROM asteracomm_endpoint_status_history s2
-                WHERE s2.endpoint = e.id
+                WHERE online =true and s2.endpoint = e.id
             )
             WHERE LOWER(e.callerid) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
