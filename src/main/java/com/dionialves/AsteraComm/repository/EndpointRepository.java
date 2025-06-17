@@ -11,6 +11,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface EndpointRepository extends JpaRepository<Endpoint, String> {
     @Query(value = """
+            WITH last_status AS (
+                SELECT DISTINCT ON (endpoint) *
+                FROM asteracomm_endpoint_status_history
+                WHERE online = true
+                ORDER BY endpoint, id DESC
+            )
             SELECT
                 e.id AS id,
                 e.callerid AS callerid,
@@ -21,23 +27,21 @@ public interface EndpointRepository extends JpaRepository<Endpoint, String> {
                 CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online
             FROM ps_endpoints e
             JOIN ps_auths a ON a.id = e.id
-            LEFT JOIN asteracomm_endpoint_status_history s ON s.id = (
-                SELECT MAX(s2.id)
-                FROM asteracomm_endpoint_status_history s2
-                WHERE online = true and s2.endpoint = e.id
-            )
+            LEFT JOIN last_status s ON s.endpoint = e.id
             WHERE LOWER(e.callerid) LIKE LOWER(CONCAT('%', :search, '%'))
-                OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
-                OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
             """, countQuery = """
+            WITH last_status AS (
+                SELECT DISTINCT ON (endpoint) *
+                FROM asteracomm_endpoint_status_history
+                WHERE online = true
+                ORDER BY endpoint, id DESC
+            )
             SELECT COUNT(*)
             FROM ps_endpoints e
             JOIN ps_auths a ON a.id = e.id
-            LEFT JOIN asteracomm_endpoint_status_history s ON s.id = (
-                SELECT MAX(s2.id)
-                FROM asteracomm_endpoint_status_history s2
-                WHERE online =true and s2.endpoint = e.id
-            )
+            LEFT JOIN last_status s ON s.endpoint = e.id
             WHERE LOWER(e.callerid) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(a.username) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
