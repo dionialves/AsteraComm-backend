@@ -107,6 +107,9 @@ public class EndpointStatusService {
     }
 
     private void saveEndpointStatus(List<EndpointStatus> listEndpointStatus) {
+
+        endpointStatusRepository.deleteAll();
+
         for (EndpointStatus endpointStatus : listEndpointStatus) {
             endpointStatusRepository.save(endpointStatus);
         }
