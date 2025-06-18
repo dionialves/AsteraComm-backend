@@ -1,8 +1,12 @@
 package com.dionialves.AsteraComm.entity;
 
-import jakarta.persistence.*;
-
-import java.util.Objects;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "ps_endpoints")
@@ -16,14 +20,20 @@ public class Endpoint {
     @JoinColumn(name = "auth", referencedColumnName = "id")
     private Auth auth;
 
+    @OneToOne(mappedBy = "endpoint")
+    private Circuit circuit;
+
     private String callerid;
+    private Boolean active;
 
-    public Endpoint() {}
+    public Endpoint() {
+    }
 
-    public Endpoint(String id, Auth auth, String callerid) {
+    public Endpoint(String id, Auth auth, Circuit circuit, String callerid, Boolean active) {
         this.id = id;
         this.auth = auth;
         this.callerid = callerid;
+        this.active = active;
     }
 
     public String getId() {
@@ -50,15 +60,19 @@ public class Endpoint {
         this.callerid = callerid;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        Endpoint endpoint = (Endpoint) o;
-        return Objects.equals(id, endpoint.id);
+    public Boolean getActive() {
+        return active;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public Circuit getCircuit() {
+        return circuit;
+    }
+
+    public void setCircuit(Circuit circuit) {
+        this.circuit = circuit;
     }
 }
