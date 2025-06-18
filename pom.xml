@@ -67,7 +67,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
-		<finalName>AsteraComm-0.1.0</finalName>
+		<finalName>AsteraComm</finalName>
 	</build>
 
 </project>
