@@ -8,10 +8,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "asteracomm_endpoint_status_history")
 public class EndpointStatus {
@@ -33,9 +40,6 @@ public class EndpointStatus {
     @Column(name = "checked_at")
     private LocalDateTime checkedAt;
 
-    public EndpointStatus() {
-    }
-
     public EndpointStatus(Endpoint endpoint, boolean online, String ip, String rtt, LocalDateTime checkedAt) {
         this.endpoint = endpoint;
         this.online = online;
@@ -44,57 +48,7 @@ public class EndpointStatus {
         this.checkedAt = checkedAt;
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public boolean isOnline() {
-        return online;
-    }
-
-    public void setOnline(boolean online) {
-        this.online = online;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public String getRtt() {
-        return rtt;
-    }
-
-    public void setRtt(String rtt) {
-        this.rtt = rtt;
-    }
-
-    public LocalDateTime getCheckedAt() {
-        return checkedAt;
-    }
-
-    public void setCheckedAt(LocalDateTime checkedAt) {
-        this.checkedAt = checkedAt;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass())
-            return false;
-        EndpointStatus that = (EndpointStatus) o;
-        return online == that.online && Objects.equals(id, that.id) && Objects.equals(ip, that.ip)
-                && Objects.equals(rtt, that.rtt);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, online, ip, rtt);
+    public void test() {
+        System.out.println();
     }
 }
