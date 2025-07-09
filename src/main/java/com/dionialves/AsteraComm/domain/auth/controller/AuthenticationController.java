@@ -8,14 +8,14 @@ import com.dionialves.AsteraComm.domain.auth.dto.RegisterDTO;
 import com.dionialves.AsteraComm.infra.security.TokenService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -49,6 +49,22 @@ public class AuthenticationController {
         User newUser = new User(data.username(), encryptedPassword, data.role());
 
         userRepository.save(newUser);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("validate")
+    public ResponseEntity<Void> validate(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String username = tokenService.validateToken(token);
+
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         return ResponseEntity.ok().build();
     }
