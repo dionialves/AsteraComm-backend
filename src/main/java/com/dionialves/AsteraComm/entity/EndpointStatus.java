@@ -52,6 +52,14 @@ public class EndpointStatus {
         this.id = id;
     }
 
+    public Endpoint getEndpoint() {
+        return endpoint;
+    }
+
+    public void setEndpoint(Endpoint endpoint) {
+        this.endpoint = endpoint;
+    }
+
     public boolean isOnline() {
         return online;
     }
