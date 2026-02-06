@@ -5,6 +5,7 @@ import com.dionialves.AsteraComm.endpoint.Auth;
 import com.dionialves.AsteraComm.endpoint.Endpoint;
 import com.dionialves.AsteraComm.endpoint.EndpointStatus;
 import com.dionialves.AsteraComm.auth.User;
+import com.dionialves.AsteraComm.auth.UserRepository;
 import com.dionialves.AsteraComm.auth.UserRole;
 import com.dionialves.AsteraComm.endpoint.AorRepository;
 import com.dionialves.AsteraComm.endpoint.AuthRepository;
@@ -38,6 +39,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private final AorRepository aorRepository;
     private final EndpointRepository endpointRepository;
     private final EndpointStatusRepository endpointStatusRepository;
+    private final UserRepository userRepository;
 
     private final Random random = new Random();
 
@@ -45,11 +47,13 @@ public class DevDataSeeder implements CommandLineRunner {
             AuthRepository authRepository,
             AorRepository aorRepository,
             EndpointRepository endpointRepository,
-            EndpointStatusRepository endpointStatusRepository) {
+            EndpointStatusRepository endpointStatusRepository,
+            UserRepository userRepository) {
         this.authRepository = authRepository;
         this.aorRepository = aorRepository;
         this.endpointRepository = endpointRepository;
         this.endpointStatusRepository = endpointStatusRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -60,6 +64,10 @@ public class DevDataSeeder implements CommandLineRunner {
         }
 
         log.info("Iniciando seed de dados de desenvolvimento...");
+
+        // Criar usuário admin padrão
+        criarUsuarioAdmin();
+
         log.info("Criando {} registros ({}% online)...", TOTAL_REGISTROS, (int) (PERCENTUAL_ONLINE * 100));
 
         int onlineCount = 0;
@@ -84,8 +92,6 @@ public class DevDataSeeder implements CommandLineRunner {
             // 4. Criar EndpointStatus
             EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
-
-            User user = criarUser();
 
             if (isOnline) {
                 onlineCount++;
@@ -167,15 +173,21 @@ public class DevDataSeeder implements CommandLineRunner {
         return endpoint;
     }
 
-    private User criarUser() {
+    private void criarUsuarioAdmin() {
+        if (userRepository.existsByUsername("admin@asteracomm.com")) {
+            log.info("Usuário admin já existe.");
+            return;
+        }
 
-        UserRole userRole = UserRole.USER;
-        User user = new User(
-                "dionialves@gmail.com",
-                "$2a$12$Qs9sEoxfQVEUADMzdc5gheS10QU8RhI56DkicvtP6i9/UUVTpd4v2",
-                userRole);
+        // Senha: admin123 (BCrypt encoded)
+        User admin = new User(
+                "Administrador",
+                "admin@asteracomm.com",
+                "$2a$12$H3aKgAf.Q0eCN7UupcUAS.M5t/cGTmRb8fgznmtag8tFzfLed5tKe",
+                UserRole.ADMIN);
 
-        return user;
+        userRepository.save(admin);
+        log.info("Usuário admin criado: admin@asteracomm.com");
     }
 
     private EndpointStatus criarEndpointStatus(Endpoint endpoint, boolean isOnline) {

@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import com.dionialves.AsteraComm.infra.security.TokenService;
@@ -23,7 +24,10 @@ public class AuthenticationController {
     @Autowired
     private TokenService tokenService;
 
-    @PostMapping("login")
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody AuthenticationDTO data) {
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.username(), data.password());
         var auth = authenticationManager.authenticate(usernamePassword);
@@ -33,20 +37,21 @@ public class AuthenticationController {
         return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
-    @PostMapping("resgister")
-    public ResponseEntity<LoginResponseDTO> register(@RequestBody RegisterDTO data) {
-        if (userRepository.findByUsername(data.username()) != null)
-            return ResponseEntity.badRequest().build();
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterDTO data) {
+        if (userRepository.existsByUsername(data.username())) {
+            return ResponseEntity.badRequest().body("Usuário já existe");
+        }
 
-        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        User newUser = new User(data.username(), encryptedPassword, data.role());
+        String encryptedPassword = passwordEncoder.encode(data.password());
+        User newUser = new User(data.name(), data.username(), encryptedPassword, data.role());
 
         userRepository.save(newUser);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PostMapping("validate")
+    @PostMapping("/validate")
     public ResponseEntity<Void> validate(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -58,6 +63,57 @@ public class AuthenticationController {
         if (username == null || username.isBlank()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getCurrentUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(new UserResponseDTO(user));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateCurrentUser(@RequestBody ProfileUpdateDTO data) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = (User) authentication.getPrincipal();
+        User dbUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (data.name() != null && !data.name().isBlank()) {
+            dbUser.setName(data.name());
+        }
+
+        User saved = userRepository.save(dbUser);
+        return ResponseEntity.ok(new UserResponseDTO(saved));
+    }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<?> updateCurrentUserPassword(@RequestBody ProfilePasswordUpdateDTO data) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User user = (User) authentication.getPrincipal();
+        User dbUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (!passwordEncoder.matches(data.currentPassword(), dbUser.getPassword())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Senha atual incorreta");
+        }
+
+        dbUser.setPassword(passwordEncoder.encode(data.newPassword()));
+        userRepository.save(dbUser);
 
         return ResponseEntity.ok().build();
     }
