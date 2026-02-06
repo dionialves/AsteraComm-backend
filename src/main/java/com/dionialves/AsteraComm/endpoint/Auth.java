@@ -21,6 +21,9 @@ public class Auth {
     @Column(name = "id")
     private String id;
 
+    @Column(nullable = false, name = "auth_type")
+    private String authType;
+
     private String userpass;
     private String username;
     private String password;

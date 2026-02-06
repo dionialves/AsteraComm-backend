@@ -43,4 +43,5 @@ public class Endpoint {
     private String rtpSymmetric;
 
     private String callerid;
+
 }

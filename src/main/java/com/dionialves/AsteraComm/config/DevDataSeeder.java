@@ -1,13 +1,15 @@
 package com.dionialves.AsteraComm.config;
 
-import com.dionialves.AsteraComm.entity.Aor;
-import com.dionialves.AsteraComm.entity.Auth;
-import com.dionialves.AsteraComm.entity.Endpoint;
-import com.dionialves.AsteraComm.entity.EndpointStatus;
-import com.dionialves.AsteraComm.repository.AorRepository;
-import com.dionialves.AsteraComm.repository.AuthRepository;
-import com.dionialves.AsteraComm.repository.EndpointRepository;
-import com.dionialves.AsteraComm.repository.EndpointStatusRepository;
+import com.dionialves.AsteraComm.endpoint.Aors;
+import com.dionialves.AsteraComm.endpoint.Auth;
+import com.dionialves.AsteraComm.endpoint.Endpoint;
+import com.dionialves.AsteraComm.endpoint.EndpointStatus;
+import com.dionialves.AsteraComm.auth.User;
+import com.dionialves.AsteraComm.auth.UserRole;
+import com.dionialves.AsteraComm.endpoint.AorRepository;
+import com.dionialves.AsteraComm.endpoint.AuthRepository;
+import com.dionialves.AsteraComm.endpoint.EndpointRepository;
+import com.dionialves.AsteraComm.endpoint.EndpointStatusRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ public class DevDataSeeder implements CommandLineRunner {
 
     private static final int TOTAL_REGISTROS = 100;
     private static final double PERCENTUAL_ONLINE = 0.80;
-    private static final String PREFIXO_NUMERO = "49334";  // 493 + 34 (DDD Florianópolis)
+    private static final String PREFIXO_NUMERO = "49334"; // 493 + 34 (DDD Florianópolis)
 
     private final AuthRepository authRepository;
     private final AorRepository aorRepository;
@@ -58,7 +60,7 @@ public class DevDataSeeder implements CommandLineRunner {
         }
 
         log.info("Iniciando seed de dados de desenvolvimento...");
-        log.info("Criando {} registros ({}% online)...", TOTAL_REGISTROS, (int)(PERCENTUAL_ONLINE * 100));
+        log.info("Criando {} registros ({}% online)...", TOTAL_REGISTROS, (int) (PERCENTUAL_ONLINE * 100));
 
         int onlineCount = 0;
         int offlineCount = 0;
@@ -72,16 +74,18 @@ public class DevDataSeeder implements CommandLineRunner {
             authRepository.save(auth);
 
             // 2. Criar Aor
-            Aor aor = criarAor(id);
+            Aors aor = criarAors(id);
             aorRepository.save(aor);
 
             // 3. Criar Endpoint
-            Endpoint endpoint = criarEndpoint(id, auth);
+            Endpoint endpoint = criarEndpoint(id, auth, aor);
             endpointRepository.save(endpoint);
 
             // 4. Criar EndpointStatus
             EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
+
+            User user = criarUser();
 
             if (isOnline) {
                 onlineCount++;
@@ -131,31 +135,47 @@ public class DevDataSeeder implements CommandLineRunner {
      * Gera RTT aleatório entre 5ms e 150ms
      */
     private String gerarRttAleatorio() {
-        int rtt = 5 + random.nextInt(146);  // 5 a 150
+        int rtt = 5 + random.nextInt(146); // 5 a 150
         return rtt + "ms";
     }
 
     private Auth criarAuth(String id) {
-        Auth auth = new Auth(id);
+        Auth auth = new Auth();
+        auth.setId(id);
+        auth.setAuthType("userpass");
         auth.setUsername(id);
         auth.setPassword(gerarSenhaAleatoria());
         return auth;
     }
 
-    private Aor criarAor(String id) {
-        Aor aor = new Aor(id);
+    private Aors criarAors(String id) {
+        Aors aor = new Aors();
+        aor.setId(id);
         aor.setMaxContacts(1);
         aor.setRemoveExisting("yes");
         aor.setQualifyFrequency(60);
         aor.setDefaultExpiration(3600);
-        aor.setMinimumExpiration(60);
-        aor.setMaximumExpiration(7200);
         return aor;
     }
 
-    private Endpoint criarEndpoint(String id, Auth auth) {
-        Endpoint endpoint = new Endpoint(id, auth, id);
+    private Endpoint criarEndpoint(String id, Auth auth, Aors aors) {
+        Endpoint endpoint = new Endpoint();
+
+        endpoint.setId(id);
+        endpoint.setAors(aors);
+        endpoint.setAuth(auth);
         return endpoint;
+    }
+
+    private User criarUser() {
+
+        UserRole userRole = UserRole.USER;
+        User user = new User(
+                "dionialves@gmail.com",
+                "$2a$12$Qs9sEoxfQVEUADMzdc5gheS10QU8RhI56DkicvtP6i9/UUVTpd4v2",
+                userRole);
+
+        return user;
     }
 
     private EndpointStatus criarEndpointStatus(Endpoint endpoint, boolean isOnline) {

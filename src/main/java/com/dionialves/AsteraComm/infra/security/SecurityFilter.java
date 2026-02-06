@@ -1,6 +1,6 @@
 package com.dionialves.AsteraComm.infra.security;
 
-import com.dionialves.AsteraComm.domain.auth.repository.UserRepository;
+import com.dionialves.AsteraComm.auth.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +24,8 @@ public class SecurityFilter extends OncePerRequestFilter {
     UserRepository userRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         var token = recoveryToken(request);
         if (token != null) {
             var login = tokenService.validateToken(token);
