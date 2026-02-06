@@ -184,7 +184,7 @@ public class DevDataSeeder implements CommandLineRunner {
                 "Administrador",
                 "admin@asteracomm.com",
                 "$2a$12$H3aKgAf.Q0eCN7UupcUAS.M5t/cGTmRb8fgznmtag8tFzfLed5tKe",
-                UserRole.ADMIN);
+                UserRole.SUPER_ADMIN);
 
         userRepository.save(admin);
         log.info("Usuário admin criado: admin@asteracomm.com");

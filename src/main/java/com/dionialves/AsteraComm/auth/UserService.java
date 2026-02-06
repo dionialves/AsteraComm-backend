@@ -27,7 +27,7 @@ public class UserService {
         return users.map(UserResponseDTO::new);
     }
 
-    public UserResponseDTO findById(String id) {
+    public UserResponseDTO findById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         return new UserResponseDTO(user);
@@ -48,7 +48,7 @@ public class UserService {
         return new UserResponseDTO(saved);
     }
 
-    public UserResponseDTO update(String id, UserUpdateDTO dto) {
+    public UserResponseDTO update(Long id, UserUpdateDTO dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -66,7 +66,7 @@ public class UserService {
         return new UserResponseDTO(saved);
     }
 
-    public UserResponseDTO updatePassword(String id, String newPassword) {
+    public UserResponseDTO updatePassword(Long id, String newPassword) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
@@ -75,21 +75,21 @@ public class UserService {
         return new UserResponseDTO(saved);
     }
 
-    public void delete(String id) {
+    public void delete(Long id) {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado");
         }
         userRepository.deleteById(id);
     }
 
-    public void disable(String id) {
+    public void disable(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         user.setEnabled(false);
         userRepository.save(user);
     }
 
-    public void enable(String id) {
+    public void enable(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
         user.setEnabled(true);

@@ -25,13 +25,18 @@ public class UserController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "name") String sort) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+        String[] sortParts = sort.split(",");
+        String sortField = sortParts[0];
+        Sort.Direction sortDirection = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortField));
         Page<UserResponseDTO> users = userService.findAll(search, pageable);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findById(@PathVariable String id) {
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
         try {
             UserResponseDTO user = userService.findById(id);
             return ResponseEntity.ok(user);
@@ -51,7 +56,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @RequestBody UserUpdateDTO dto) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UserUpdateDTO dto) {
         try {
             UserResponseDTO user = userService.update(id, dto);
             return ResponseEntity.ok(user);
@@ -61,7 +66,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/password")
-    public ResponseEntity<?> updatePassword(@PathVariable String id, @RequestBody PasswordUpdateDTO dto) {
+    public ResponseEntity<?> updatePassword(@PathVariable Long id, @RequestBody PasswordUpdateDTO dto) {
         try {
             userService.updatePassword(id, dto.password());
             return ResponseEntity.ok().build();
@@ -71,7 +76,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         try {
             userService.delete(id);
             return ResponseEntity.noContent().build();
@@ -81,7 +86,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/disable")
-    public ResponseEntity<Void> disable(@PathVariable String id) {
+    public ResponseEntity<Void> disable(@PathVariable Long id) {
         try {
             userService.disable(id);
             return ResponseEntity.ok().build();
@@ -91,7 +96,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/enable")
-    public ResponseEntity<Void> enable(@PathVariable String id) {
+    public ResponseEntity<Void> enable(@PathVariable Long id) {
         try {
             userService.enable(id);
             return ResponseEntity.ok().build();

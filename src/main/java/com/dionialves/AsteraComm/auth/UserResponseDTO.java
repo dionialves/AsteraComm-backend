@@ -3,7 +3,7 @@ package com.dionialves.AsteraComm.auth;
 import java.time.LocalDateTime;
 
 public record UserResponseDTO(
-        String id,
+        Long id,
         String name,
         String username,
         UserRole role,
