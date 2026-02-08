@@ -1,9 +1,13 @@
-package com.dionialves.AsteraComm.auth;
+package com.dionialves.AsteraComm.user;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.dionialves.AsteraComm.user.dto.UserCreateDTO;
+import com.dionialves.AsteraComm.user.dto.UserResponseDTO;
+import com.dionialves.AsteraComm.user.dto.UserUpdateDTO;
 
 @Service
 public class UserService {

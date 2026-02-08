@@ -1,6 +1,9 @@
-package com.dionialves.AsteraComm.auth;
+package com.dionialves.AsteraComm.user.dto;
 
 import java.time.LocalDateTime;
+
+import com.dionialves.AsteraComm.user.User;
+import com.dionialves.AsteraComm.user.UserRole;
 
 public record UserResponseDTO(
         Long id,

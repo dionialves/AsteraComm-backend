@@ -3,7 +3,7 @@ package com.dionialves.AsteraComm.infra.security;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
-import com.dionialves.AsteraComm.auth.User;
+import com.dionialves.AsteraComm.user.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

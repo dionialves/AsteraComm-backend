@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.auth;
+package com.dionialves.AsteraComm.user;
 
 public enum UserRole {
     SUPER_ADMIN("super_admin"),

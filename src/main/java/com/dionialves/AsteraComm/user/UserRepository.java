@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.auth;
+package com.dionialves.AsteraComm.user;
 
 import java.util.Optional;
 
