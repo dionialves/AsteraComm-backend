@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.endpoint;
+package com.dionialves.AsteraComm.asterisk.auth;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,7 +24,6 @@ public class Auth {
     @Column(nullable = false, name = "auth_type")
     private String authType;
 
-    private String userpass;
     private String username;
     private String password;
 

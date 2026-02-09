@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.endpoint;
+package com.dionialves.AsteraComm.asterisk.aors;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

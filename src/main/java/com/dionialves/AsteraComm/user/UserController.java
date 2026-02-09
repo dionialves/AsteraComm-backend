@@ -45,6 +45,17 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @PostMapping("/users")
+    public ResponseEntity<?> create(@RequestBody UserCreateDTO dto) {
+        try {
+            UserResponseDTO user = userService.create(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } catch (RuntimeException e) {
+            System.out.println(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @GetMapping("/user/{id}")
     public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
         try {
@@ -52,16 +63,6 @@ public class UserController {
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PostMapping("/user")
-    public ResponseEntity<?> create(@RequestBody UserCreateDTO dto) {
-        try {
-            UserResponseDTO user = userService.create(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.endpoint;
+package com.dionialves.AsteraComm.asterisk.endpoint;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +10,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import com.dionialves.AsteraComm.asterisk.auth.Auth;
+import com.dionialves.AsteraComm.asterisk.aors.Aors;
 
 @Getter
 @Setter
@@ -41,6 +44,9 @@ public class Endpoint {
 
     @Column(name = "rtp_symmetric")
     private String rtpSymmetric;
+
+    @Column(name = "rewrite_contact")
+    private String rewriteContact;
 
     private String callerid;
 

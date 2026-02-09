@@ -20,9 +20,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import com.dionialves.AsteraComm.endpoint.Endpoint;
 import com.dionialves.AsteraComm.client.Client;
 import com.dionialves.AsteraComm.DID.DID;
+import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 
 @Getter
 @Setter

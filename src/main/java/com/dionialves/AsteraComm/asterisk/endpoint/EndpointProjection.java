@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.endpoint;
+package com.dionialves.AsteraComm.asterisk.endpoint;
 
 public interface EndpointProjection {
     String getId();

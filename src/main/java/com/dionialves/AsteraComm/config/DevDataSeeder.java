@@ -1,16 +1,20 @@
 package com.dionialves.AsteraComm.config;
 
-import com.dionialves.AsteraComm.endpoint.Aors;
-import com.dionialves.AsteraComm.endpoint.Auth;
-import com.dionialves.AsteraComm.endpoint.Endpoint;
-import com.dionialves.AsteraComm.endpoint.EndpointStatus;
+import com.dionialves.AsteraComm.asterisk.aors.AorRepository;
+import com.dionialves.AsteraComm.asterisk.aors.Aors;
+import com.dionialves.AsteraComm.asterisk.auth.Auth;
+import com.dionialves.AsteraComm.asterisk.auth.AuthRepository;
+import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
+import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
+import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatus;
+import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
+import com.dionialves.AsteraComm.asterisk.extension.Extension;
+import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
 import com.dionialves.AsteraComm.user.User;
 import com.dionialves.AsteraComm.user.UserRepository;
 import com.dionialves.AsteraComm.user.UserRole;
-import com.dionialves.AsteraComm.endpoint.AorRepository;
-import com.dionialves.AsteraComm.endpoint.AuthRepository;
-import com.dionialves.AsteraComm.endpoint.EndpointRepository;
-import com.dionialves.AsteraComm.endpoint.EndpointStatusRepository;
+
+import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +29,7 @@ import java.util.Random;
  * Popula o banco de dados com dados de teste.
  * Executado apenas quando o profile "dev" está ativo.
  */
+@RequiredArgsConstructor
 @Component
 @Profile("dev")
 public class DevDataSeeder implements CommandLineRunner {
@@ -40,21 +45,9 @@ public class DevDataSeeder implements CommandLineRunner {
     private final EndpointRepository endpointRepository;
     private final EndpointStatusRepository endpointStatusRepository;
     private final UserRepository userRepository;
+    private final ExtensionRepository extensionRepository;
 
     private final Random random = new Random();
-
-    public DevDataSeeder(
-            AuthRepository authRepository,
-            AorRepository aorRepository,
-            EndpointRepository endpointRepository,
-            EndpointStatusRepository endpointStatusRepository,
-            UserRepository userRepository) {
-        this.authRepository = authRepository;
-        this.aorRepository = aorRepository;
-        this.endpointRepository = endpointRepository;
-        this.endpointStatusRepository = endpointStatusRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public void run(String... args) {
@@ -89,7 +82,10 @@ public class DevDataSeeder implements CommandLineRunner {
             Endpoint endpoint = criarEndpoint(id, auth, aor);
             endpointRepository.save(endpoint);
 
-            // 4. Criar EndpointStatus
+            // 4. Cria Extensions
+            criarExtensions(endpoint);
+
+            // 5. Criar EndpointStatus
             EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
 
@@ -170,7 +166,29 @@ public class DevDataSeeder implements CommandLineRunner {
         endpoint.setId(id);
         endpoint.setAors(aors);
         endpoint.setAuth(auth);
+
         return endpoint;
+
+    }
+
+    private void criarExtensions(Endpoint endpoint) {
+        // Criando Extension
+        Extension extension1 = new Extension();
+        Extension extension2 = new Extension();
+
+        extension1.setContext("from-pstn");
+        extension1.setExten(endpoint);
+        extension1.setPriority(1);
+        extension1.setApp("Dial");
+        String appdata = "PJSIP/" + endpoint.getId() + ",60";
+        extension1.setAppdata(appdata);
+        extensionRepository.save(extension1);
+
+        extension2.setContext("from-pstn");
+        extension2.setExten(endpoint);
+        extension2.setPriority(2);
+        extension2.setApp("Hangup");
+        extensionRepository.save(extension2);
     }
 
     private void criarUsuarioAdmin() {

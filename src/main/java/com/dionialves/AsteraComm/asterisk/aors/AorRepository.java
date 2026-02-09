@@ -1,8 +1,8 @@
-package com.dionialves.AsteraComm.endpoint;
+package com.dionialves.AsteraComm.asterisk.aors;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AuthRepository extends JpaRepository<Auth, String> {
+public interface AorRepository extends JpaRepository<Aors, String> {
 }
