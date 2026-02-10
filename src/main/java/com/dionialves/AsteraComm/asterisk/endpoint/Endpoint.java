@@ -50,4 +50,7 @@ public class Endpoint {
 
     private String callerid;
 
+    @Column(name = "mailboxes")
+    private String mailBoxes;
+
 }

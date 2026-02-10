@@ -153,10 +153,10 @@ public class DevDataSeeder implements CommandLineRunner {
     private Aors criarAors(String id) {
         Aors aor = new Aors();
         aor.setId(id);
-        aor.setMaxContacts(1);
+        aor.setMaxContacts("1");
         aor.setRemoveExisting("yes");
-        aor.setQualifyFrequency(60);
-        aor.setDefaultExpiration(3600);
+        aor.setQualifyFrequency("60");
+        aor.setDefaultExpiration("3600");
         return aor;
     }
 

@@ -46,10 +46,10 @@ public class EndpointService {
         // 1. Criar Aors
         Aors aors = new Aors();
         aors.setId(number);
-        aors.setDefaultExpiration(60);
-        aors.setMaxContacts(1);
+        aors.setDefaultExpiration("60");
+        aors.setMaxContacts("1");
         aors.setRemoveExisting("yes");
-        aors.setQualifyFrequency(30);
+        aors.setQualifyFrequency("30");
         aorRepository.save(aors);
 
         // 2. Criar Auth

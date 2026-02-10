@@ -22,16 +22,16 @@ public class Aors {
     private String id;
 
     @Column(name = "default_expiration")
-    private Integer defaultExpiration;
+    private String defaultExpiration;
 
     private String contact;
 
     @Column(name = "max_contacts")
-    private Integer maxContacts;
+    private String maxContacts;
 
     @Column(name = "remove_existing")
     private String removeExisting;
 
     @Column(name = "qualify_frequency")
-    private Integer qualifyFrequency;
+    private String qualifyFrequency;
 }
