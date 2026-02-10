@@ -43,13 +43,13 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@Valid @PathVariable Long id, @RequestBody UserUpdateDTO dto) {
+    public ResponseEntity<?> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
         UserResponseDTO user = userService.update(id, dto);
         return ResponseEntity.ok(user);
     }
 
     @PatchMapping("/{id}/password")
-    public ResponseEntity<?> updatePassword(@Valid @PathVariable Long id, @RequestBody UserPasswordUpdateDTO dto) {
+    public ResponseEntity<?> updatePassword(@PathVariable Long id, @Valid @RequestBody UserPasswordUpdateDTO dto) {
         userService.updatePassword(id, dto.password());
         return ResponseEntity.ok().build();
     }

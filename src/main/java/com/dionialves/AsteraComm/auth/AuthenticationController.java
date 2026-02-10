@@ -22,6 +22,7 @@ import com.dionialves.AsteraComm.user.UserRepository;
 import com.dionialves.AsteraComm.user.dto.UserPasswordUpdateDTO;
 import com.dionialves.AsteraComm.user.dto.UserResponseDTO;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -72,7 +73,7 @@ public class AuthenticationController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<UserResponseDTO> updateCurrentUser(@RequestBody ProfileUpdateDTO data) {
+    public ResponseEntity<UserResponseDTO> updateCurrentUser(@Valid @RequestBody ProfileUpdateDTO data) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -91,7 +92,7 @@ public class AuthenticationController {
     }
 
     @PatchMapping("/me/password")
-    public ResponseEntity<?> updateCurrentUserPassword(@RequestBody UserPasswordUpdateDTO data) {
+    public ResponseEntity<?> updateCurrentUserPassword(@Valid @RequestBody UserPasswordUpdateDTO data) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
