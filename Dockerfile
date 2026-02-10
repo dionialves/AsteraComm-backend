@@ -1,23 +1,32 @@
-FROM debian:bookworm-slim
+# =============================================================================
+# AsteraComm Backend - Dockerfile de Produção (Multi-stage Build)
+# =============================================================================
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Stage 1: Build
+FROM eclipse-temurin:21-jdk AS builder
 
 RUN apt-get update && \
-    apt-get install -y wget gnupg2 ca-certificates vim tar maven && \
+    apt-get install -y maven && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV JAVA_VERSION=21.0.2
-ENV JAVA_HOME=/opt/java/openjdk
-ENV PATH="$JAVA_HOME/bin:$PATH"
+WORKDIR /build
 
-RUN mkdir -p /opt/java && \
-    wget -q https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz && \
-    tar -xzf openjdk-21.0.2_linux-x64_bin.tar.gz -C /opt/java && \
-    rm openjdk-21.0.2_linux-x64_bin.tar.gz && \
-    mv /opt/java/jdk-$JAVA_VERSION $JAVA_HOME
+# Copia apenas o pom.xml primeiro para cache de dependências
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copia código fonte e compila
+COPY src ./src
+RUN mvn clean package -DskipTests -B
+
+# Stage 2: Runtime (imagem leve, apenas JRE)
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+COPY --from=builder /build/target/AsteraComm.jar ./AsteraComm.jar
 
 EXPOSE 8090
 
-WORKDIR /app
-CMD ["sh", "-c", "mvn clean package && java -jar target/AsteraComm.jar"]
+CMD ["java", "-jar", "AsteraComm.jar"]
