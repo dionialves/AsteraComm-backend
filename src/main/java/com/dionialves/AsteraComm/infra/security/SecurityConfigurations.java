@@ -33,13 +33,6 @@ public class SecurityConfigurations {
                         .permitAll()
 
                         .requestMatchers(
-                                "/api/user/me",
-                                "/api/user/me/**")
-                        .authenticated()
-
-                        .requestMatchers(
-                                "/api/user",
-                                "/api/user/**",
                                 "/api/users",
                                 "/api/users/**")
                         .hasRole("SUPER_ADMIN")

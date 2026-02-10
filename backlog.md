@@ -2,12 +2,8 @@
 
 ## Auth e User
 
-- Separar 100% as responsabilidades, hoje estao misturadas
-
-## Endpoint
-
-- Necessário criar um pacote chamado asterisk e nele separar os dominios, ou seja, cada classe de dominio(endpois, aors, auth, etc)
-- Criar crud para Endpoint
+- Criar verificacao de senha forte
+- Criar update de senha obrigatoria
 
 ## API Externa
 
