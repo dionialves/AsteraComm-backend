@@ -24,6 +24,8 @@ public class Aors {
     @Column(name = "default_expiration")
     private Integer defaultExpiration;
 
+    private String contact;
+
     @Column(name = "max_contacts")
     private Integer maxContacts;
 
