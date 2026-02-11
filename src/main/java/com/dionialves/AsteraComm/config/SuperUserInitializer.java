@@ -27,8 +27,8 @@ public class SuperUserInitializer implements ApplicationRunner {
     @Value("${super.user.password}")
     private String superPassword;
 
-    @Value("${super.user.email}")
-    private String superEmail;
+    @Value("${super.user.name}")
+    private String superName;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -45,7 +45,7 @@ public class SuperUserInitializer implements ApplicationRunner {
         }
 
         User superUser = new User();
-        superUser.setName("Super Administrator");
+        superUser.setName(superName);
         superUser.setUsername(superUsername);
         superUser.setPassword(passwordEncoder.encode(superPassword));
         superUser.setRole(UserRole.SUPER_ADMIN);
