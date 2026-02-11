@@ -1,18 +1,18 @@
 package com.dionialves.AsteraComm.config;
 
-import com.dionialves.AsteraComm.asterisk.aors.AorRepository;
-import com.dionialves.AsteraComm.asterisk.aors.Aors;
-import com.dionialves.AsteraComm.asterisk.auth.Auth;
-import com.dionialves.AsteraComm.asterisk.auth.AuthRepository;
-import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
-import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
-import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatus;
-import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
-import com.dionialves.AsteraComm.asterisk.extension.Extension;
-import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
-import com.dionialves.AsteraComm.user.User;
-import com.dionialves.AsteraComm.user.UserRepository;
-import com.dionialves.AsteraComm.user.UserRole;
+import com.dionialves.AsteraComm.domain.asterisk.aors.AorRepository;
+import com.dionialves.AsteraComm.domain.asterisk.aors.Aors;
+import com.dionialves.AsteraComm.domain.asterisk.auth.Auth;
+import com.dionialves.AsteraComm.domain.asterisk.auth.AuthRepository;
+import com.dionialves.AsteraComm.domain.asterisk.endpoint.Endpoint;
+import com.dionialves.AsteraComm.domain.asterisk.endpoint.EndpointRepository;
+import com.dionialves.AsteraComm.domain.asterisk.extension.Extension;
+import com.dionialves.AsteraComm.domain.asterisk.extension.ExtensionRepository;
+import com.dionialves.AsteraComm.domain.core.circuit.status.CircuitStatus;
+import com.dionialves.AsteraComm.domain.core.circuit.status.CircuitStatusRepository;
+import com.dionialves.AsteraComm.domain.core.user.User;
+import com.dionialves.AsteraComm.domain.core.user.UserRepository;
+import com.dionialves.AsteraComm.domain.core.user.UserRole;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,7 +43,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private final AuthRepository authRepository;
     private final AorRepository aorRepository;
     private final EndpointRepository endpointRepository;
-    private final EndpointStatusRepository endpointStatusRepository;
+    private final CircuitStatusRepository endpointStatusRepository;
     private final UserRepository userRepository;
     private final ExtensionRepository extensionRepository;
 
@@ -86,7 +86,7 @@ public class DevDataSeeder implements CommandLineRunner {
             criarExtensions(endpoint);
 
             // 5. Criar EndpointStatus
-            EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
+            CircuitStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
 
             if (isOnline) {
@@ -177,7 +177,7 @@ public class DevDataSeeder implements CommandLineRunner {
         Extension extension2 = new Extension();
 
         extension1.setContext("from-pstn");
-        extension1.setExten(endpoint);
+        extension1.setExten(endpoint.getId());
         extension1.setPriority(1);
         extension1.setApp("Dial");
         String appdata = "PJSIP/" + endpoint.getId() + ",60";
@@ -185,7 +185,7 @@ public class DevDataSeeder implements CommandLineRunner {
         extensionRepository.save(extension1);
 
         extension2.setContext("from-pstn");
-        extension2.setExten(endpoint);
+        extension2.setExten(endpoint.getId());
         extension2.setPriority(2);
         extension2.setApp("Hangup");
         extensionRepository.save(extension2);
@@ -208,8 +208,8 @@ public class DevDataSeeder implements CommandLineRunner {
         log.info("Usuário admin criado: admin@asteracomm.com");
     }
 
-    private EndpointStatus criarEndpointStatus(Endpoint endpoint, boolean isOnline) {
-        EndpointStatus status = new EndpointStatus();
+    private CircuitStatus criarEndpointStatus(Endpoint endpoint, boolean isOnline) {
+        CircuitStatus status = new CircuitStatus();
         status.setEndpoint(endpoint);
         status.setOnline(isOnline);
         status.setCheckedAt(LocalDateTime.now().minusMinutes(random.nextInt(60)));

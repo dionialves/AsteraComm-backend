@@ -1,6 +1,6 @@
 package com.dionialves.AsteraComm.infra.security;
 
-import com.dionialves.AsteraComm.user.UserRepository;
+import com.dionialves.AsteraComm.domain.core.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
