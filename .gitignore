@@ -1,6 +1,5 @@
 ### Project
 .env
-src/main/resources/application-prod.properties
 .tool-versions
 
 HELP.md
