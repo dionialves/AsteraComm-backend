@@ -53,4 +53,7 @@ public class Endpoint {
     @Column(name = "mailboxes")
     private String mailBoxes;
 
+    @Column(name = "outbound_auth")
+    private String outboundAuth;
+
 }
