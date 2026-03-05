@@ -10,6 +10,8 @@ import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatus;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
 import com.dionialves.AsteraComm.asterisk.extension.Extension;
 import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
+import com.dionialves.AsteraComm.circuit.Circuit;
+import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.user.User;
 import com.dionialves.AsteraComm.user.UserRepository;
 import com.dionialves.AsteraComm.user.UserRole;
@@ -40,6 +42,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private static final double PERCENTUAL_ONLINE = 0.80;
     private static final String PREFIXO_NUMERO = "49334"; // 493 + 34 (DDD Florianópolis)
 
+    private final CircuitRepository circuitRepository;
     private final AuthRepository authRepository;
     private final AorRepository aorRepository;
     private final EndpointRepository endpointRepository;
@@ -51,14 +54,13 @@ public class DevDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (endpointRepository.count() > 0) {
+        if (circuitRepository.count() > 0) {
             log.info("Dados já existem no banco. Pulando seed de desenvolvimento.");
             return;
         }
 
         log.info("Iniciando seed de dados de desenvolvimento...");
 
-        // Criar usuário admin padrão
         criarUsuarioAdmin();
 
         log.info("Criando {} registros ({}% online)...", TOTAL_REGISTROS, (int) (PERCENTUAL_ONLINE * 100));
@@ -67,33 +69,37 @@ public class DevDataSeeder implements CommandLineRunner {
         int offlineCount = 0;
 
         for (int i = 0; i < TOTAL_REGISTROS; i++) {
-            String id = gerarNumeroCliente(i);
+            String number = gerarNumeroCliente(i);
+            String password = gerarSenhaAleatoria();
             boolean isOnline = random.nextDouble() < PERCENTUAL_ONLINE;
 
-            // 1. Criar Auth
-            Auth auth = criarAuth(id);
+            // 1. Circuit (entidade de domínio)
+            Circuit circuit = new Circuit();
+            circuit.setNumber(number);
+            circuit.setPassword(password);
+            circuitRepository.save(circuit);
+
+            // 2. Auth (PJSIP)
+            Auth auth = criarAuth(number, password);
             authRepository.save(auth);
 
-            // 2. Criar Aor
-            Aors aor = criarAors(id);
+            // 3. Aors (PJSIP)
+            Aors aor = criarAors(number);
             aorRepository.save(aor);
 
-            // 3. Criar Endpoint
-            Endpoint endpoint = criarEndpoint(id, auth, aor);
+            // 4. Endpoint (PJSIP)
+            Endpoint endpoint = criarEndpoint(number, auth, aor);
             endpointRepository.save(endpoint);
 
-            // 4. Cria Extensions
+            // 5. Extensions
             criarExtensions(endpoint);
 
-            // 5. Criar EndpointStatus
+            // 6. EndpointStatus (simulação dev)
             EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
 
-            if (isOnline) {
-                onlineCount++;
-            } else {
-                offlineCount++;
-            }
+            if (isOnline) onlineCount++;
+            else offlineCount++;
         }
 
         log.info("Seed finalizado com sucesso!");
@@ -101,18 +107,10 @@ public class DevDataSeeder implements CommandLineRunner {
                 TOTAL_REGISTROS, onlineCount, offlineCount);
     }
 
-    /**
-     * Gera número do cliente no padrão 493XXXXXXX
-     * Exemplo: 4933400001, 4933400002, etc.
-     */
     private String gerarNumeroCliente(int indice) {
-        // PREFIXO_NUMERO (49334) + 5 dígitos sequenciais com padding
         return String.format("%s%05d", PREFIXO_NUMERO, indice + 1);
     }
 
-    /**
-     * Gera senha aleatória de 8 caracteres
-     */
     private String gerarSenhaAleatoria() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*";
         StringBuilder senha = new StringBuilder();
@@ -122,9 +120,6 @@ public class DevDataSeeder implements CommandLineRunner {
         return senha.toString();
     }
 
-    /**
-     * Gera IP aleatório na faixa 192.168.x.x ou 10.0.x.x
-     */
     private String gerarIpAleatorio() {
         if (random.nextBoolean()) {
             return String.format("192.168.%d.%d", random.nextInt(256), random.nextInt(256));
@@ -133,26 +128,23 @@ public class DevDataSeeder implements CommandLineRunner {
         }
     }
 
-    /**
-     * Gera RTT aleatório entre 5ms e 150ms
-     */
     private String gerarRttAleatorio() {
-        int rtt = 5 + random.nextInt(146); // 5 a 150
+        int rtt = 5 + random.nextInt(146);
         return rtt + "ms";
     }
 
-    private Auth criarAuth(String id) {
+    private Auth criarAuth(String number, String password) {
         Auth auth = new Auth();
-        auth.setId(id);
+        auth.setId(number);
         auth.setAuthType("userpass");
-        auth.setUsername(id);
-        auth.setPassword(gerarSenhaAleatoria());
+        auth.setUsername(number);
+        auth.setPassword(password);
         return auth;
     }
 
-    private Aors criarAors(String id) {
+    private Aors criarAors(String number) {
         Aors aor = new Aors();
-        aor.setId(id);
+        aor.setId(number);
         aor.setMaxContacts("1");
         aor.setRemoveExisting("yes");
         aor.setQualifyFrequency("60");
@@ -160,30 +152,24 @@ public class DevDataSeeder implements CommandLineRunner {
         return aor;
     }
 
-    private Endpoint criarEndpoint(String id, Auth auth, Aors aors) {
+    private Endpoint criarEndpoint(String number, Auth auth, Aors aors) {
         Endpoint endpoint = new Endpoint();
-
-        endpoint.setId(id);
+        endpoint.setId(number);
         endpoint.setAors(aors);
         endpoint.setAuth(auth);
-
         return endpoint;
-
     }
 
     private void criarExtensions(Endpoint endpoint) {
-        // Criando Extension
         Extension extension1 = new Extension();
-        Extension extension2 = new Extension();
-
         extension1.setContext("from-pstn");
         extension1.setExten(endpoint);
         extension1.setPriority(1);
         extension1.setApp("Dial");
-        String appdata = "PJSIP/" + endpoint.getId() + ",60";
-        extension1.setAppdata(appdata);
+        extension1.setAppdata("PJSIP/" + endpoint.getId() + ",60");
         extensionRepository.save(extension1);
 
+        Extension extension2 = new Extension();
         extension2.setContext("from-pstn");
         extension2.setExten(endpoint);
         extension2.setPriority(2);
@@ -197,7 +183,6 @@ public class DevDataSeeder implements CommandLineRunner {
             return;
         }
 
-        // Senha: admin123 (BCrypt encoded)
         User admin = new User(
                 "Administrador",
                 "admin@asteracomm.com",
