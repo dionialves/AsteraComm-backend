@@ -46,6 +46,7 @@ public class EndpointStatusService {
 
         if (response == null) {
             System.err.println("Failed to get response from asterisk");
+            return;
         }
 
         List<EndpointStatus> listEndpointStatus = this.getEndpointStatus(response.getResult());
