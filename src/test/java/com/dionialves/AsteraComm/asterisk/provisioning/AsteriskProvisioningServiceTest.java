@@ -8,7 +8,10 @@ import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
 import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
+import com.dionialves.AsteraComm.asterisk.registration.PsRegistration;
+import com.dionialves.AsteraComm.asterisk.registration.PsRegistrationRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
+import com.dionialves.AsteraComm.trunk.Trunk;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,18 +43,28 @@ class AsteriskProvisioningServiceTest {
     private EndpointStatusRepository endpointStatusRepository;
 
     @Mock
+    private PsRegistrationRepository psRegistrationRepository;
+
+    @Mock
     private AmiService amiService;
 
     @InjectMocks
     private AsteriskProvisioningService asteriskProvisioningService;
 
     private Circuit testCircuit;
+    private Trunk testTrunk;
 
     @BeforeEach
     void setUp() {
         testCircuit = new Circuit();
         testCircuit.setNumber("1001");
         testCircuit.setPassword("secret");
+
+        testTrunk = new Trunk();
+        testTrunk.setName("provedor1");
+        testTrunk.setHost("sip.provedor1.com.br");
+        testTrunk.setUsername("user123");
+        testTrunk.setPassword("senha123");
     }
 
     @Test
@@ -148,5 +161,103 @@ class AsteriskProvisioningServiceTest {
         verifyNoInteractions(aorRepository);
         verifyNoInteractions(authRepository);
         verifyNoMoreInteractions(endpointRepository);
+    }
+
+    // === Trunk provisioning ===
+
+    @Test
+    void provisionTrunk_shouldCreateAorsWithStaticContact() {
+        asteriskProvisioningService.provisionTrunk(testTrunk);
+
+        verify(aorRepository).save(argThat(a ->
+                a.getId().equals("provedor1")
+                && a.getContact().equals("sip:sip.provedor1.com.br")));
+    }
+
+    @Test
+    void provisionTrunk_shouldCreateAuth() {
+        asteriskProvisioningService.provisionTrunk(testTrunk);
+
+        verify(authRepository).save(argThat(a ->
+                a.getId().equals("provedor1")
+                && a.getUsername().equals("user123")
+                && a.getPassword().equals("senha123")));
+    }
+
+    @Test
+    void provisionTrunk_shouldCreateEndpointWithOutboundAuth() {
+        asteriskProvisioningService.provisionTrunk(testTrunk);
+
+        verify(endpointRepository).save(argThat(e ->
+                e.getId().equals("provedor1")
+                && e.getOutboundAuth().equals("provedor1")
+                && e.getAuth() == null));
+    }
+
+    @Test
+    void provisionTrunk_shouldCreateRegistration() {
+        asteriskProvisioningService.provisionTrunk(testTrunk);
+
+        verify(psRegistrationRepository).save(argThat(r ->
+                r.getId().equals("provedor1")
+                && r.getServerUri().equals("sip:sip.provedor1.com.br")
+                && r.getClientUri().equals("sip:user123@sip.provedor1.com.br")
+                && r.getOutboundAuth().equals("provedor1")));
+    }
+
+    @Test
+    void provisionTrunk_shouldCallPjsipReload() {
+        asteriskProvisioningService.provisionTrunk(testTrunk);
+
+        verify(amiService).sendCommand("pjsip reload");
+    }
+
+    @Test
+    void reprovisionTrunk_shouldUpdateAuthPasswordAndRegistrationAndCallPjsipReload() {
+        Auth auth = new Auth();
+        auth.setId("provedor1");
+        auth.setPassword("senhaantiga");
+
+        PsRegistration reg = new PsRegistration();
+        reg.setId("provedor1");
+        reg.setClientUri("sip:userold@sip.provedor1.com.br");
+
+        when(authRepository.findById("provedor1")).thenReturn(Optional.of(auth));
+        when(psRegistrationRepository.findById("provedor1")).thenReturn(Optional.of(reg));
+
+        asteriskProvisioningService.reprovisionTrunk(testTrunk);
+
+        verify(authRepository).save(argThat(a -> a.getPassword().equals("senha123")));
+        verify(psRegistrationRepository).save(argThat(r ->
+                r.getClientUri().equals("sip:user123@sip.provedor1.com.br")
+                && r.getServerUri().equals("sip:sip.provedor1.com.br")));
+        verify(amiService).sendCommand("pjsip reload");
+    }
+
+    @Test
+    void deprovisionTrunk_shouldRemoveAllAsteriskEntities() {
+        PsRegistration reg = new PsRegistration();
+        reg.setId("provedor1");
+
+        when(psRegistrationRepository.findById("provedor1")).thenReturn(Optional.of(reg));
+        when(endpointRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(authRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(aorRepository.findById("provedor1")).thenReturn(Optional.empty());
+
+        asteriskProvisioningService.deprovisionTrunk(testTrunk);
+
+        verify(psRegistrationRepository).delete(reg);
+    }
+
+    @Test
+    void deprovisionTrunk_shouldCallPjsipReload() {
+        when(psRegistrationRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(endpointRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(authRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(aorRepository.findById("provedor1")).thenReturn(Optional.empty());
+
+        asteriskProvisioningService.deprovisionTrunk(testTrunk);
+
+        verify(amiService).sendCommand("pjsip reload");
     }
 }

@@ -1,0 +1,35 @@
+package com.dionialves.AsteraComm.trunk;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface TrunkRepository extends JpaRepository<Trunk, String> {
+
+    @Query(value = """
+            WITH last_status AS (
+                SELECT DISTINCT ON (trunk_name) *
+                FROM asteracomm_trunk_registration_status
+                ORDER BY trunk_name, id DESC
+            )
+            SELECT
+                t.name AS name,
+                t.host AS host,
+                t.username AS username,
+                CASE WHEN s.registered IS NOT NULL AND s.registered THEN true ELSE false END AS registered
+            FROM asteracomm_trunks t
+            LEFT JOIN last_status s ON s.trunk_name = t.name
+            WHERE LOWER(t.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.host) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.username) LIKE LOWER(CONCAT('%', :search, '%'))
+            """, countQuery = """
+            SELECT COUNT(*)
+            FROM asteracomm_trunks t
+            WHERE LOWER(t.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.host) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.username) LIKE LOWER(CONCAT('%', :search, '%'))
+            """, nativeQuery = true)
+    Page<TrunkProjection> findAllTrunks(@Param("search") String search, Pageable pageable);
+}

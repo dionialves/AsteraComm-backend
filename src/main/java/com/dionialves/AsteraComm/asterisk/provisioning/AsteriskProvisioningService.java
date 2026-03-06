@@ -9,7 +9,10 @@ import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
 import com.dionialves.AsteraComm.asterisk.extension.Extension;
 import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
+import com.dionialves.AsteraComm.asterisk.registration.PsRegistration;
+import com.dionialves.AsteraComm.asterisk.registration.PsRegistrationRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
+import com.dionialves.AsteraComm.trunk.Trunk;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ public class AsteriskProvisioningService {
     private final EndpointRepository endpointRepository;
     private final ExtensionRepository extensionRepository;
     private final EndpointStatusRepository endpointStatusRepository;
+    private final PsRegistrationRepository psRegistrationRepository;
     private final AmiService amiService;
 
     @Transactional
@@ -96,5 +100,75 @@ public class AsteriskProvisioningService {
             amiService.sendCommand("pjsip reload");
             amiService.sendCommand("dialplan reload");
         });
+    }
+
+    @Transactional
+    public void provisionTrunk(Trunk trunk) {
+        String name = trunk.getName();
+        String host = trunk.getHost();
+
+        Aors aors = new Aors();
+        aors.setId(name);
+        aors.setContact("sip:" + host);
+        aors.setQualifyFrequency("30");
+        aorRepository.save(aors);
+
+        Auth auth = new Auth();
+        auth.setId(name);
+        auth.setAuthType("userpass");
+        auth.setUsername(trunk.getUsername());
+        auth.setPassword(trunk.getPassword());
+        authRepository.save(auth);
+
+        Endpoint endpoint = new Endpoint();
+        endpoint.setId(name);
+        endpoint.setAors(aors);
+        endpoint.setContext("from-external");
+        endpoint.setDisallow("all");
+        endpoint.setAllow("ulaw,alaw");
+        endpoint.setDirect_media("no");
+        endpoint.setOutboundAuth(name);
+        endpointRepository.save(endpoint);
+
+        PsRegistration registration = new PsRegistration();
+        registration.setId(name);
+        registration.setServerUri("sip:" + host);
+        registration.setClientUri("sip:" + trunk.getUsername() + "@" + host);
+        registration.setOutboundAuth(name);
+        registration.setRetryInterval("60");
+        psRegistrationRepository.save(registration);
+
+        amiService.sendCommand("pjsip reload");
+    }
+
+    @Transactional
+    public void reprovisionTrunk(Trunk trunk) {
+        String name = trunk.getName();
+        String host = trunk.getHost();
+
+        authRepository.findById(name).ifPresent(auth -> {
+            auth.setPassword(trunk.getPassword());
+            authRepository.save(auth);
+        });
+
+        psRegistrationRepository.findById(name).ifPresent(reg -> {
+            reg.setServerUri("sip:" + host);
+            reg.setClientUri("sip:" + trunk.getUsername() + "@" + host);
+            psRegistrationRepository.save(reg);
+        });
+
+        amiService.sendCommand("pjsip reload");
+    }
+
+    @Transactional
+    public void deprovisionTrunk(Trunk trunk) {
+        String name = trunk.getName();
+
+        psRegistrationRepository.findById(name).ifPresent(psRegistrationRepository::delete);
+        endpointRepository.findById(name).ifPresent(endpointRepository::delete);
+        authRepository.findById(name).ifPresent(authRepository::delete);
+        aorRepository.findById(name).ifPresent(aorRepository::delete);
+
+        amiService.sendCommand("pjsip reload");
     }
 }

@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.asterisk.provisioning;
 import org.asteriskjava.manager.ManagerConnection;
 import org.asteriskjava.manager.ManagerConnectionFactory;
 import org.asteriskjava.manager.action.CommandAction;
+import org.asteriskjava.manager.response.CommandResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,20 @@ public class AmiService {
             connection.logoff();
         } catch (Exception e) {
             System.err.println("AMI command failed [" + command + "]: " + e.getMessage());
+        }
+    }
+
+    public CommandResponse sendCommandWithResponse(String command) {
+        try {
+            ManagerConnectionFactory factory = new ManagerConnectionFactory(hostname, port, username, password);
+            ManagerConnection connection = factory.createManagerConnection();
+            connection.login();
+            CommandResponse response = (CommandResponse) connection.sendAction(new CommandAction(command));
+            connection.logoff();
+            return response;
+        } catch (Exception e) {
+            System.err.println("AMI command failed [" + command + "]: " + e.getMessage());
+            return null;
         }
     }
 }
