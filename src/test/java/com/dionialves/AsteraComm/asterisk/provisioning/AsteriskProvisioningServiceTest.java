@@ -4,6 +4,7 @@ import com.dionialves.AsteraComm.asterisk.aors.AorRepository;
 import com.dionialves.AsteraComm.asterisk.aors.Aors;
 import com.dionialves.AsteraComm.asterisk.auth.Auth;
 import com.dionialves.AsteraComm.asterisk.auth.AuthRepository;
+import com.dionialves.AsteraComm.asterisk.dialplan.DialplanGeneratorService;
 import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
@@ -47,6 +48,9 @@ class AsteriskProvisioningServiceTest {
 
     @Mock
     private AmiService amiService;
+
+    @Mock
+    private DialplanGeneratorService dialplanGeneratorService;
 
     @InjectMocks
     private AsteriskProvisioningService asteriskProvisioningService;
@@ -269,5 +273,36 @@ class AsteriskProvisioningServiceTest {
         asteriskProvisioningService.deprovisionTrunk(testTrunk);
 
         verify(amiService).sendCommand("pjsip reload");
+    }
+
+    // === DialplanGeneratorService integration ===
+
+    @Test
+    void provisionTrunk_shouldCallGenerateAndReload() {
+        asteriskProvisioningService.provisionTrunk(testTrunk);
+
+        verify(dialplanGeneratorService).generateAndReload();
+    }
+
+    @Test
+    void deprovisionTrunk_shouldCallGenerateAndReload() {
+        when(psRegistrationRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(endpointRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(authRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(aorRepository.findById("provedor1")).thenReturn(Optional.empty());
+
+        asteriskProvisioningService.deprovisionTrunk(testTrunk);
+
+        verify(dialplanGeneratorService).generateAndReload();
+    }
+
+    @Test
+    void reprovisionTrunk_shouldNotCallGenerateAndReload() {
+        when(authRepository.findById("provedor1")).thenReturn(Optional.empty());
+        when(psRegistrationRepository.findById("provedor1")).thenReturn(Optional.empty());
+
+        asteriskProvisioningService.reprovisionTrunk(testTrunk);
+
+        verify(dialplanGeneratorService, never()).generateAndReload();
     }
 }

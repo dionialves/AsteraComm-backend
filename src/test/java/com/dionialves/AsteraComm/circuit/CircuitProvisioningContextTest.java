@@ -8,6 +8,7 @@ import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
 import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
+import com.dionialves.AsteraComm.asterisk.dialplan.DialplanGeneratorService;
 import com.dionialves.AsteraComm.asterisk.provisioning.AmiService;
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.asterisk.registration.PsRegistrationRepository;
@@ -40,6 +41,7 @@ class CircuitProvisioningContextTest {
     @Mock private EndpointStatusRepository endpointStatusRepository;
     @Mock private PsRegistrationRepository psRegistrationRepository;
     @Mock private AmiService amiService;
+    @Mock private DialplanGeneratorService dialplanGeneratorService;
 
     @InjectMocks
     private AsteriskProvisioningService provisioningService;

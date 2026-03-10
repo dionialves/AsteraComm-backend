@@ -4,6 +4,7 @@ import com.dionialves.AsteraComm.asterisk.aors.AorRepository;
 import com.dionialves.AsteraComm.asterisk.aors.Aors;
 import com.dionialves.AsteraComm.asterisk.auth.Auth;
 import com.dionialves.AsteraComm.asterisk.auth.AuthRepository;
+import com.dionialves.AsteraComm.asterisk.dialplan.DialplanGeneratorService;
 import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
@@ -28,6 +29,7 @@ public class AsteriskProvisioningService {
     private final EndpointStatusRepository endpointStatusRepository;
     private final PsRegistrationRepository psRegistrationRepository;
     private final AmiService amiService;
+    private final DialplanGeneratorService dialplanGeneratorService;
 
     // =========================================================
     // Circuit provisioning
@@ -177,6 +179,7 @@ public class AsteriskProvisioningService {
         createOutboundExtensions(trunk);
 
         amiService.sendCommand("pjsip reload");
+        dialplanGeneratorService.generateAndReload();
     }
 
     @Transactional
@@ -212,6 +215,7 @@ public class AsteriskProvisioningService {
         aorRepository.findById(name).ifPresent(aorRepository::delete);
 
         amiService.sendCommand("pjsip reload");
+        dialplanGeneratorService.generateAndReload();
     }
 
     private void createOutboundExtensions(Trunk trunk) {
