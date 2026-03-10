@@ -43,6 +43,7 @@ class CircuitControllerTest {
         testCircuit = new Circuit();
         testCircuit.setNumber("1001");
         testCircuit.setPassword("secret");
+        testCircuit.setTrunkName("opasuite");
 
         mockMvc = MockMvcBuilders.standaloneSetup(circuitController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -94,7 +95,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(post("/api/circuits")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":\"1001\",\"password\":\"secret\"}"))
+                        .content("{\"number\":\"1001\",\"password\":\"secret\",\"trunkName\":\"opasuite\"}"))
                 .andExpect(status().isCreated());
     }
 
@@ -105,7 +106,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(post("/api/circuits")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":\"1001\",\"password\":\"secret\"}"))
+                        .content("{\"number\":\"1001\",\"password\":\"secret\",\"trunkName\":\"opasuite\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -115,7 +116,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(put("/api/circuits/1001")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":\"1001\",\"password\":\"newpassword\"}"))
+                        .content("{\"number\":\"1001\",\"password\":\"newpassword\",\"trunkName\":\"opasuite\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -126,7 +127,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(put("/api/circuits/9999")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":\"9999\",\"password\":\"newpassword\"}"))
+                        .content("{\"number\":\"9999\",\"password\":\"newpassword\",\"trunkName\":\"opasuite\"}"))
                 .andExpect(status().isNotFound());
     }
 

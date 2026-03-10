@@ -18,6 +18,7 @@ public interface CircuitRepository extends JpaRepository<Circuit, String> {
             SELECT
                 c.number AS id,
                 c.password AS password,
+                c.trunk_name AS trunkName,
                 s.ip AS ip,
                 s.rtt AS rtt,
                 CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online

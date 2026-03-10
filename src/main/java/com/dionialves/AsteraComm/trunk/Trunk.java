@@ -29,4 +29,7 @@ public class Trunk {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = true)
+    private String prefix;
 }

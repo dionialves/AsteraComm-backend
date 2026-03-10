@@ -36,6 +36,7 @@ public class CircuitService {
         Circuit circuit = new Circuit();
         circuit.setNumber(dto.number());
         circuit.setPassword(dto.password());
+        circuit.setTrunkName(dto.trunkName());
         Circuit saved = circuitRepository.save(circuit);
 
         asteriskProvisioningService.provision(saved);
@@ -48,10 +49,13 @@ public class CircuitService {
         Circuit circuit = circuitRepository.findById(number)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
+        String previousTrunkName = circuit.getTrunkName();
+
         circuit.setPassword(dto.password());
+        circuit.setTrunkName(dto.trunkName());
         Circuit saved = circuitRepository.save(circuit);
 
-        asteriskProvisioningService.reprovision(saved);
+        asteriskProvisioningService.reprovision(saved, previousTrunkName);
 
         return saved;
     }

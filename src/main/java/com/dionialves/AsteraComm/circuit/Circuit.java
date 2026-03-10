@@ -23,4 +23,7 @@ public class Circuit {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(name = "trunk_name", nullable = false)
+    private String trunkName;
 }

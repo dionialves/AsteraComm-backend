@@ -78,7 +78,7 @@ class TrunkServiceTest {
 
     @Test
     void create_shouldSaveTrunkAndCallProvision() {
-        TrunkCreateDTO dto = new TrunkCreateDTO("provedor2", "sip.prov2.com", "user2", "pass2");
+        TrunkCreateDTO dto = new TrunkCreateDTO("provedor2", "sip.prov2.com", "user2", "pass2", null);
         when(trunkRepository.existsById("provedor2")).thenReturn(false);
         when(trunkRepository.save(any(Trunk.class))).thenReturn(testTrunk);
 
@@ -94,7 +94,7 @@ class TrunkServiceTest {
 
     @Test
     void create_shouldThrowBusinessException_whenNameAlreadyExists() {
-        TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "sip.prov.com", "user", "pass");
+        TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "sip.prov.com", "user", "pass", null);
         when(trunkRepository.existsById("provedor1")).thenReturn(true);
 
         assertThatThrownBy(() -> trunkService.create(dto))
@@ -104,7 +104,7 @@ class TrunkServiceTest {
 
     @Test
     void update_shouldUpdateFieldsAndCallReprovision() {
-        TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "novo.host.com", "newuser", "newpass");
+        TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "novo.host.com", "newuser", "newpass", null);
         when(trunkRepository.findById("provedor1")).thenReturn(Optional.of(testTrunk));
         when(trunkRepository.save(any(Trunk.class))).thenReturn(testTrunk);
 
@@ -119,7 +119,7 @@ class TrunkServiceTest {
 
     @Test
     void update_shouldNotChangePassword_whenPasswordIsBlank() {
-        TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "novo.host.com", "newuser", "");
+        TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "novo.host.com", "newuser", "", null);
         when(trunkRepository.findById("provedor1")).thenReturn(Optional.of(testTrunk));
         when(trunkRepository.save(any(Trunk.class))).thenReturn(testTrunk);
 
@@ -130,7 +130,7 @@ class TrunkServiceTest {
 
     @Test
     void update_shouldThrowNotFoundException_whenNotExists() {
-        TrunkCreateDTO dto = new TrunkCreateDTO("inexistente", "host.com", "user", "pass");
+        TrunkCreateDTO dto = new TrunkCreateDTO("inexistente", "host.com", "user", "pass", null);
         when(trunkRepository.findById("inexistente")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> trunkService.update("inexistente", dto))

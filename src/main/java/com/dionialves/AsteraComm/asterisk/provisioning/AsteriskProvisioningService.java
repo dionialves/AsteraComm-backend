@@ -29,9 +29,14 @@ public class AsteriskProvisioningService {
     private final PsRegistrationRepository psRegistrationRepository;
     private final AmiService amiService;
 
+    // =========================================================
+    // Circuit provisioning
+    // =========================================================
+
     @Transactional
     public void provision(Circuit circuit) {
         String number = circuit.getNumber();
+        String trunkName = circuit.getTrunkName();
 
         Aors aors = new Aors();
         aors.setId(number);
@@ -52,7 +57,7 @@ public class AsteriskProvisioningService {
         endpoint.setId(number);
         endpoint.setAors(aors);
         endpoint.setAuth(auth);
-        endpoint.setContext("from-internal");
+        endpoint.setContext("internal-" + trunkName);
         endpoint.setDisallow("all");
         endpoint.setAllow("ulaw,alaw");
         endpoint.setDirect_media("no");
@@ -62,45 +67,76 @@ public class AsteriskProvisioningService {
         endpoint.setCallerid(number);
         endpointRepository.save(endpoint);
 
-        Extension extension1 = new Extension();
-        extension1.setContext("from-pstn");
-        extension1.setExten(endpoint);
-        extension1.setPriority(1);
-        extension1.setApp("Dial");
-        extension1.setAppdata("PJSIP/" + number + ",60");
-        extensionRepository.save(extension1);
-
-        Extension extension2 = new Extension();
-        extension2.setContext("from-pstn");
-        extension2.setExten(endpoint);
-        extension2.setPriority(2);
-        extension2.setApp("Hangup");
-        extensionRepository.save(extension2);
+        createInboundExtensions(number, trunkName);
 
         amiService.sendCommand("pjsip reload");
     }
 
     @Transactional
-    public void reprovision(Circuit circuit) {
-        authRepository.findById(circuit.getNumber()).ifPresent(auth -> {
+    public void reprovision(Circuit circuit, String previousTrunkName) {
+        String number = circuit.getNumber();
+        String newTrunkName = circuit.getTrunkName();
+
+        authRepository.findById(number).ifPresent(auth -> {
             auth.setPassword(circuit.getPassword());
             authRepository.save(auth);
         });
+
+        if (!previousTrunkName.equals(newTrunkName)) {
+            extensionRepository.deleteByExtenAndContext(number, "pstn-" + previousTrunkName);
+
+            endpointRepository.findById(number).ifPresent(endpoint -> {
+                endpoint.setContext("internal-" + newTrunkName);
+                endpointRepository.save(endpoint);
+            });
+
+            createInboundExtensions(number, newTrunkName);
+
+            amiService.sendCommand("dialplan reload");
+        }
+
         amiService.sendCommand("pjsip reload");
     }
 
     @Transactional
     public void deprovision(Circuit circuit) {
-        endpointRepository.findById(circuit.getNumber()).ifPresent(endpoint -> {
-            extensionRepository.deleteByExten(endpoint);
+        String number = circuit.getNumber();
+
+        extensionRepository.deleteByExten(number);
+
+        endpointRepository.findById(number).ifPresent(endpoint -> {
             endpointStatusRepository.deleteByEndpoint(endpoint);
             endpointRepository.delete(endpoint);
             authRepository.delete(endpoint.getAuth());
             aorRepository.delete(endpoint.getAors());
-            amiService.sendCommand("pjsip reload");
-            amiService.sendCommand("dialplan reload");
         });
+
+        amiService.sendCommand("pjsip reload");
+        amiService.sendCommand("dialplan reload");
     }
+
+    private void createInboundExtensions(String number, String trunkName) {
+        String pstnContext = "pstn-" + trunkName;
+
+        Extension dial = new Extension();
+        dial.setContext(pstnContext);
+        dial.setExten(number);
+        dial.setPriority(1);
+        dial.setApp("Dial");
+        dial.setAppdata("PJSIP/" + number + ",60");
+        extensionRepository.save(dial);
+
+        Extension hangup = new Extension();
+        hangup.setContext(pstnContext);
+        hangup.setExten(number);
+        hangup.setPriority(2);
+        hangup.setApp("Hangup");
+        extensionRepository.save(hangup);
+    }
+
+    // =========================================================
+    // Trunk provisioning
+    // =========================================================
 
     @Transactional
     public void provisionTrunk(Trunk trunk) {
@@ -123,7 +159,7 @@ public class AsteriskProvisioningService {
         Endpoint endpoint = new Endpoint();
         endpoint.setId(name);
         endpoint.setAors(aors);
-        endpoint.setContext("from-external");
+        endpoint.setContext("pstn-" + name);
         endpoint.setDisallow("all");
         endpoint.setAllow("ulaw,alaw");
         endpoint.setDirect_media("no");
@@ -137,6 +173,8 @@ public class AsteriskProvisioningService {
         registration.setOutboundAuth(name);
         registration.setRetryInterval("60");
         psRegistrationRepository.save(registration);
+
+        createOutboundExtensions(trunk);
 
         amiService.sendCommand("pjsip reload");
     }
@@ -157,6 +195,9 @@ public class AsteriskProvisioningService {
             psRegistrationRepository.save(reg);
         });
 
+        extensionRepository.deleteByExtenAndContext("_X.", "internal-" + name);
+        createOutboundExtensions(trunk);
+
         amiService.sendCommand("pjsip reload");
     }
 
@@ -164,11 +205,41 @@ public class AsteriskProvisioningService {
     public void deprovisionTrunk(Trunk trunk) {
         String name = trunk.getName();
 
+        extensionRepository.deleteByExtenAndContext("_X.", "internal-" + name);
         psRegistrationRepository.findById(name).ifPresent(psRegistrationRepository::delete);
         endpointRepository.findById(name).ifPresent(endpointRepository::delete);
         authRepository.findById(name).ifPresent(authRepository::delete);
         aorRepository.findById(name).ifPresent(aorRepository::delete);
 
         amiService.sendCommand("pjsip reload");
+    }
+
+    private void createOutboundExtensions(Trunk trunk) {
+        String name = trunk.getName();
+        String context = "internal-" + name;
+        String prefix = trunk.getPrefix() != null ? trunk.getPrefix() : "";
+
+        Extension noop = new Extension();
+        noop.setContext(context);
+        noop.setExten("_X.");
+        noop.setPriority(1);
+        noop.setApp("NoOp");
+        noop.setAppdata("Chamada para ${EXTEN}");
+        extensionRepository.save(noop);
+
+        Extension dial = new Extension();
+        dial.setContext(context);
+        dial.setExten("_X.");
+        dial.setPriority(2);
+        dial.setApp("Dial");
+        dial.setAppdata("PJSIP/" + prefix + "${EXTEN}@" + name + ",60");
+        extensionRepository.save(dial);
+
+        Extension hangup = new Extension();
+        hangup.setContext(context);
+        hangup.setExten("_X.");
+        hangup.setPriority(3);
+        hangup.setApp("Hangup");
+        extensionRepository.save(hangup);
     }
 }

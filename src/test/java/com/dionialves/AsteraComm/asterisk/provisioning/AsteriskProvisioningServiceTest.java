@@ -59,6 +59,7 @@ class AsteriskProvisioningServiceTest {
         testCircuit = new Circuit();
         testCircuit.setNumber("1001");
         testCircuit.setPassword("secret");
+        testCircuit.setTrunkName("provedor1");
 
         testTrunk = new Trunk();
         testTrunk.setName("provedor1");
@@ -104,13 +105,22 @@ class AsteriskProvisioningServiceTest {
     }
 
     @Test
+    void provision_shouldSetCircuitEndpointContextToInternalTrunk() {
+        asteriskProvisioningService.provision(testCircuit);
+
+        verify(endpointRepository).save(argThat(e ->
+                e.getId().equals("1001")
+                && e.getContext().equals("internal-provedor1")));
+    }
+
+    @Test
     void reprovision_shouldUpdateAuthPasswordAndCallPjsipReload() {
         Auth auth = new Auth();
         auth.setId("1001");
         auth.setPassword("oldpassword");
         when(authRepository.findById("1001")).thenReturn(Optional.of(auth));
 
-        asteriskProvisioningService.reprovision(testCircuit);
+        asteriskProvisioningService.reprovision(testCircuit, "provedor1");
 
         verify(authRepository).save(argThat(a -> a.getPassword().equals("secret")));
         verify(amiService).sendCommand("pjsip reload");
@@ -130,7 +140,7 @@ class AsteriskProvisioningServiceTest {
 
         asteriskProvisioningService.deprovision(testCircuit);
 
-        verify(extensionRepository).deleteByExten(endpoint);
+        verify(extensionRepository).deleteByExten("1001");
         verify(endpointStatusRepository).deleteByEndpoint(endpoint);
         verify(endpointRepository).delete(endpoint);
         verify(authRepository).delete(auth);
@@ -157,7 +167,7 @@ class AsteriskProvisioningServiceTest {
 
         asteriskProvisioningService.deprovision(testCircuit);
 
-        verifyNoInteractions(extensionRepository);
+        verify(extensionRepository).deleteByExten("1001");
         verifyNoInteractions(aorRepository);
         verifyNoInteractions(authRepository);
         verifyNoMoreInteractions(endpointRepository);

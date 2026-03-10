@@ -12,6 +12,8 @@ import com.dionialves.AsteraComm.asterisk.extension.Extension;
 import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
+import com.dionialves.AsteraComm.trunk.Trunk;
+import com.dionialves.AsteraComm.trunk.TrunkRepository;
 import com.dionialves.AsteraComm.user.User;
 import com.dionialves.AsteraComm.user.UserRepository;
 import com.dionialves.AsteraComm.user.UserRole;
@@ -38,11 +40,12 @@ public class DevDataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
 
-    private static final int TOTAL_REGISTROS = 100;
+    private static final int TOTAL_CIRCUITOS = 10;
     private static final double PERCENTUAL_ONLINE = 0.80;
-    private static final String PREFIXO_NUMERO = "49334"; // 493 + 34 (DDD Florianópolis)
+    private static final String PREFIXO_NUMERO = "49334";
 
     private final CircuitRepository circuitRepository;
+    private final TrunkRepository trunkRepository;
     private final AuthRepository authRepository;
     private final AorRepository aorRepository;
     private final EndpointRepository endpointRepository;
@@ -63,38 +66,35 @@ public class DevDataSeeder implements CommandLineRunner {
 
         criarUsuarioAdmin();
 
-        log.info("Criando {} registros ({}% online)...", TOTAL_REGISTROS, (int) (PERCENTUAL_ONLINE * 100));
+        Trunk trunk = criarTronco();
+
+        log.info("Criando {} circuitos vinculados ao tronco '{}'...", TOTAL_CIRCUITOS, trunk.getName());
 
         int onlineCount = 0;
         int offlineCount = 0;
 
-        for (int i = 0; i < TOTAL_REGISTROS; i++) {
+        for (int i = 0; i < TOTAL_CIRCUITOS; i++) {
             String number = gerarNumeroCliente(i);
             String password = gerarSenhaAleatoria();
             boolean isOnline = random.nextDouble() < PERCENTUAL_ONLINE;
 
-            // 1. Circuit (entidade de domínio)
             Circuit circuit = new Circuit();
             circuit.setNumber(number);
             circuit.setPassword(password);
+            circuit.setTrunkName(trunk.getName());
             circuitRepository.save(circuit);
 
-            // 2. Auth (PJSIP)
             Auth auth = criarAuth(number, password);
             authRepository.save(auth);
 
-            // 3. Aors (PJSIP)
             Aors aor = criarAors(number);
             aorRepository.save(aor);
 
-            // 4. Endpoint (PJSIP)
-            Endpoint endpoint = criarEndpoint(number, auth, aor);
+            Endpoint endpoint = criarEndpoint(number, auth, aor, trunk.getName());
             endpointRepository.save(endpoint);
 
-            // 5. Extensions
-            criarExtensions(endpoint);
+            criarExtensions(number, trunk.getName());
 
-            // 6. EndpointStatus (simulação dev)
             EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
 
@@ -102,9 +102,25 @@ public class DevDataSeeder implements CommandLineRunner {
             else offlineCount++;
         }
 
-        log.info("Seed finalizado com sucesso!");
-        log.info("Total: {} registros | Online: {} | Offline: {}",
-                TOTAL_REGISTROS, onlineCount, offlineCount);
+        log.info("Seed finalizado! Circuitos: {} | Online: {} | Offline: {}",
+                TOTAL_CIRCUITOS, onlineCount, offlineCount);
+    }
+
+    private Trunk criarTronco() {
+        if (trunkRepository.existsById("dev-operadora")) {
+            return trunkRepository.findById("dev-operadora").orElseThrow();
+        }
+
+        Trunk trunk = new Trunk();
+        trunk.setName("dev-operadora");
+        trunk.setHost("sip.dev-operadora.local");
+        trunk.setUsername("dev-user");
+        trunk.setPassword("dev-senha");
+        trunk.setPrefix(null);
+        trunkRepository.save(trunk);
+
+        log.info("Tronco fictício criado: '{}'", trunk.getName());
+        return trunk;
     }
 
     private String gerarNumeroCliente(int indice) {
@@ -112,9 +128,9 @@ public class DevDataSeeder implements CommandLineRunner {
     }
 
     private String gerarSenhaAleatoria() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*";
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         StringBuilder senha = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 10; i++) {
             senha.append(chars.charAt(random.nextInt(chars.length())));
         }
         return senha.toString();
@@ -152,29 +168,39 @@ public class DevDataSeeder implements CommandLineRunner {
         return aor;
     }
 
-    private Endpoint criarEndpoint(String number, Auth auth, Aors aors) {
+    private Endpoint criarEndpoint(String number, Auth auth, Aors aors, String trunkName) {
         Endpoint endpoint = new Endpoint();
         endpoint.setId(number);
         endpoint.setAors(aors);
         endpoint.setAuth(auth);
+        endpoint.setContext("internal-" + trunkName);
+        endpoint.setDisallow("all");
+        endpoint.setAllow("ulaw,alaw");
+        endpoint.setDirect_media("no");
+        endpoint.setForce_rport("yes");
+        endpoint.setRewriteContact("yes");
+        endpoint.setRtpSymmetric("yes");
+        endpoint.setCallerid(number);
         return endpoint;
     }
 
-    private void criarExtensions(Endpoint endpoint) {
-        Extension extension1 = new Extension();
-        extension1.setContext("from-pstn");
-        extension1.setExten(endpoint);
-        extension1.setPriority(1);
-        extension1.setApp("Dial");
-        extension1.setAppdata("PJSIP/" + endpoint.getId() + ",60");
-        extensionRepository.save(extension1);
+    private void criarExtensions(String number, String trunkName) {
+        String pstnContext = "pstn-" + trunkName;
 
-        Extension extension2 = new Extension();
-        extension2.setContext("from-pstn");
-        extension2.setExten(endpoint);
-        extension2.setPriority(2);
-        extension2.setApp("Hangup");
-        extensionRepository.save(extension2);
+        Extension dial = new Extension();
+        dial.setContext(pstnContext);
+        dial.setExten(number);
+        dial.setPriority(1);
+        dial.setApp("Dial");
+        dial.setAppdata("PJSIP/" + number + ",60");
+        extensionRepository.save(dial);
+
+        Extension hangup = new Extension();
+        hangup.setContext(pstnContext);
+        hangup.setExten(number);
+        hangup.setPriority(2);
+        hangup.setApp("Hangup");
+        extensionRepository.save(hangup);
     }
 
     private void criarUsuarioAdmin() {

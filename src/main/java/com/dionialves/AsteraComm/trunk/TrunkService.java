@@ -39,6 +39,7 @@ public class TrunkService {
         trunk.setHost(dto.host());
         trunk.setUsername(dto.username());
         trunk.setPassword(dto.password());
+        trunk.setPrefix(dto.prefix());
         Trunk saved = trunkRepository.save(trunk);
 
         asteriskProvisioningService.provisionTrunk(saved);
@@ -53,6 +54,7 @@ public class TrunkService {
 
         trunk.setHost(dto.host());
         trunk.setUsername(dto.username());
+        trunk.setPrefix(dto.prefix());
         if (dto.password() != null && !dto.password().isBlank()) {
             trunk.setPassword(dto.password());
         }

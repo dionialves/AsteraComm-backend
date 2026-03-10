@@ -39,6 +39,7 @@ class CircuitServiceTest {
         testCircuit = new Circuit();
         testCircuit.setNumber("1001");
         testCircuit.setPassword("secret");
+        testCircuit.setTrunkName("opasuite");
     }
 
     @Test
@@ -73,20 +74,22 @@ class CircuitServiceTest {
 
     @Test
     void create_shouldSaveCircuitAndCallProvision() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("1002", "mypassword");
+        CircuitCreateDTO dto = new CircuitCreateDTO("1002", "mypassword", "opasuite");
         when(circuitRepository.existsById("1002")).thenReturn(false);
         when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
 
         circuitService.create(dto);
 
         verify(circuitRepository).save(argThat(c ->
-                c.getNumber().equals("1002") && c.getPassword().equals("mypassword")));
+                c.getNumber().equals("1002")
+                && c.getPassword().equals("mypassword")
+                && c.getTrunkName().equals("opasuite")));
         verify(asteriskProvisioningService).provision(any(Circuit.class));
     }
 
     @Test
     void create_shouldThrowBusinessException_whenNumberAlreadyExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("1001", "password");
+        CircuitCreateDTO dto = new CircuitCreateDTO("1001", "password", "opasuite");
         when(circuitRepository.existsById("1001")).thenReturn(true);
 
         assertThatThrownBy(() -> circuitService.create(dto))
@@ -96,19 +99,20 @@ class CircuitServiceTest {
 
     @Test
     void update_shouldUpdatePasswordAndCallReprovision() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("1001", "newpassword");
+        CircuitCreateDTO dto = new CircuitCreateDTO("1001", "newpassword", "opasuite");
+        testCircuit.setTrunkName("opasuite");
         when(circuitRepository.findById("1001")).thenReturn(Optional.of(testCircuit));
         when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
 
         circuitService.update("1001", dto);
 
         verify(circuitRepository).save(argThat(c -> c.getPassword().equals("newpassword")));
-        verify(asteriskProvisioningService).reprovision(any(Circuit.class));
+        verify(asteriskProvisioningService).reprovision(any(Circuit.class), eq("opasuite"));
     }
 
     @Test
     void update_shouldThrowNotFoundException_whenNotExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("9999", "password");
+        CircuitCreateDTO dto = new CircuitCreateDTO("9999", "password", "opasuite");
         when(circuitRepository.findById("9999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> circuitService.update("9999", dto))

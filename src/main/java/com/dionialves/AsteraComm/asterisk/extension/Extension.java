@@ -1,14 +1,10 @@
 package com.dionialves.AsteraComm.asterisk.extension;
 
-import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,12 +23,11 @@ public class Extension {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 40)
     private String context;
 
-    @ManyToOne
-    @JoinColumn(name = "exten")
-    private Endpoint exten;
+    @Column(name = "exten", nullable = false, length = 40)
+    private String exten;
 
     @Column(nullable = false)
     private Integer priority;
@@ -42,5 +37,4 @@ public class Extension {
 
     @Column(nullable = true, length = 128)
     private String appdata;
-
 }
