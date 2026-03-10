@@ -69,8 +69,6 @@ public class AsteriskProvisioningService {
         endpoint.setCallerid(number);
         endpointRepository.save(endpoint);
 
-        createInboundExtensions(number, trunkName);
-
         amiService.sendCommand("pjsip reload");
     }
 
@@ -85,16 +83,10 @@ public class AsteriskProvisioningService {
         });
 
         if (!previousTrunkName.equals(newTrunkName)) {
-            extensionRepository.deleteByExtenAndContext(number, "pstn-" + previousTrunkName);
-
             endpointRepository.findById(number).ifPresent(endpoint -> {
                 endpoint.setContext("internal-" + newTrunkName);
                 endpointRepository.save(endpoint);
             });
-
-            createInboundExtensions(number, newTrunkName);
-
-            amiService.sendCommand("dialplan reload");
         }
 
         amiService.sendCommand("pjsip reload");
@@ -103,8 +95,6 @@ public class AsteriskProvisioningService {
     @Transactional
     public void deprovision(Circuit circuit) {
         String number = circuit.getNumber();
-
-        extensionRepository.deleteByExten(number);
 
         endpointRepository.findById(number).ifPresent(endpoint -> {
             endpointStatusRepository.deleteByEndpoint(endpoint);
@@ -115,25 +105,6 @@ public class AsteriskProvisioningService {
 
         amiService.sendCommand("pjsip reload");
         amiService.sendCommand("dialplan reload");
-    }
-
-    private void createInboundExtensions(String number, String trunkName) {
-        String pstnContext = "pstn-" + trunkName;
-
-        Extension dial = new Extension();
-        dial.setContext(pstnContext);
-        dial.setExten(number);
-        dial.setPriority(1);
-        dial.setApp("Dial");
-        dial.setAppdata("PJSIP/" + number + ",60");
-        extensionRepository.save(dial);
-
-        Extension hangup = new Extension();
-        hangup.setContext(pstnContext);
-        hangup.setExten(number);
-        hangup.setPriority(2);
-        hangup.setApp("Hangup");
-        extensionRepository.save(hangup);
     }
 
     // =========================================================

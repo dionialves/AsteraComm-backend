@@ -2,7 +2,6 @@ package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
-import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,12 +28,12 @@ public class CircuitService {
 
     @Transactional
     public Circuit create(CircuitCreateDTO dto) {
-        if (circuitRepository.existsById(dto.number())) {
-            throw new BusinessException("Circuito já existe com este número");
-        }
+        String code = circuitRepository.findMaxCode()
+                .map(max -> String.valueOf(Long.parseLong(max) + 1))
+                .orElse("100000");
 
         Circuit circuit = new Circuit();
-        circuit.setNumber(dto.number());
+        circuit.setNumber(code);
         circuit.setPassword(dto.password());
         circuit.setTrunkName(dto.trunkName());
         Circuit saved = circuitRepository.save(circuit);

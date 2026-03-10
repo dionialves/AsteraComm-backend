@@ -61,7 +61,7 @@ class AsteriskProvisioningServiceTest {
     @BeforeEach
     void setUp() {
         testCircuit = new Circuit();
-        testCircuit.setNumber("1001");
+        testCircuit.setNumber("100000");
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("provedor1");
 
@@ -76,7 +76,7 @@ class AsteriskProvisioningServiceTest {
     void provision_shouldCreateAors() {
         asteriskProvisioningService.provision(testCircuit);
 
-        verify(aorRepository).save(argThat(a -> a.getId().equals("1001")));
+        verify(aorRepository).save(argThat(a -> a.getId().equals("100000")));
     }
 
     @Test
@@ -84,21 +84,21 @@ class AsteriskProvisioningServiceTest {
         asteriskProvisioningService.provision(testCircuit);
 
         verify(authRepository).save(argThat(a ->
-                a.getId().equals("1001") && a.getPassword().equals("secret")));
+                a.getId().equals("100000") && a.getPassword().equals("secret")));
     }
 
     @Test
     void provision_shouldCreateEndpoint() {
         asteriskProvisioningService.provision(testCircuit);
 
-        verify(endpointRepository).save(argThat(e -> e.getId().equals("1001")));
+        verify(endpointRepository).save(argThat(e -> e.getId().equals("100000")));
     }
 
     @Test
-    void provision_shouldCreateTwoExtensions() {
+    void provision_shouldNotCreateExtensions() {
         asteriskProvisioningService.provision(testCircuit);
 
-        verify(extensionRepository, times(2)).save(any());
+        verify(extensionRepository, never()).save(any());
     }
 
     @Test
@@ -113,16 +113,16 @@ class AsteriskProvisioningServiceTest {
         asteriskProvisioningService.provision(testCircuit);
 
         verify(endpointRepository).save(argThat(e ->
-                e.getId().equals("1001")
+                e.getId().equals("100000")
                 && e.getContext().equals("internal-provedor1")));
     }
 
     @Test
     void reprovision_shouldUpdateAuthPasswordAndCallPjsipReload() {
         Auth auth = new Auth();
-        auth.setId("1001");
+        auth.setId("100000");
         auth.setPassword("oldpassword");
-        when(authRepository.findById("1001")).thenReturn(Optional.of(auth));
+        when(authRepository.findById("100000")).thenReturn(Optional.of(auth));
 
         asteriskProvisioningService.reprovision(testCircuit, "provedor1");
 
@@ -133,31 +133,31 @@ class AsteriskProvisioningServiceTest {
     @Test
     void deprovision_shouldRemoveAllAsteriskEntities() {
         Aors aors = new Aors();
-        aors.setId("1001");
+        aors.setId("100000");
         Auth auth = new Auth();
-        auth.setId("1001");
+        auth.setId("100000");
         Endpoint endpoint = new Endpoint();
-        endpoint.setId("1001");
+        endpoint.setId("100000");
         endpoint.setAors(aors);
         endpoint.setAuth(auth);
-        when(endpointRepository.findById("1001")).thenReturn(Optional.of(endpoint));
+        when(endpointRepository.findById("100000")).thenReturn(Optional.of(endpoint));
 
         asteriskProvisioningService.deprovision(testCircuit);
 
-        verify(extensionRepository).deleteByExten("1001");
         verify(endpointStatusRepository).deleteByEndpoint(endpoint);
         verify(endpointRepository).delete(endpoint);
         verify(authRepository).delete(auth);
         verify(aorRepository).delete(aors);
+        verifyNoInteractions(extensionRepository);
     }
 
     @Test
     void deprovision_shouldCallPjsipAndDialplanReload() {
         Endpoint endpoint = new Endpoint();
-        endpoint.setId("1001");
+        endpoint.setId("100000");
         endpoint.setAors(new Aors());
         endpoint.setAuth(new Auth());
-        when(endpointRepository.findById("1001")).thenReturn(Optional.of(endpoint));
+        when(endpointRepository.findById("100000")).thenReturn(Optional.of(endpoint));
 
         asteriskProvisioningService.deprovision(testCircuit);
 
@@ -167,13 +167,13 @@ class AsteriskProvisioningServiceTest {
 
     @Test
     void deprovision_shouldDoNothing_whenEndpointNotFound() {
-        when(endpointRepository.findById("1001")).thenReturn(Optional.empty());
+        when(endpointRepository.findById("100000")).thenReturn(Optional.empty());
 
         asteriskProvisioningService.deprovision(testCircuit);
 
-        verify(extensionRepository).deleteByExten("1001");
         verifyNoInteractions(aorRepository);
         verifyNoInteractions(authRepository);
+        verifyNoInteractions(extensionRepository);
         verifyNoMoreInteractions(endpointRepository);
     }
 

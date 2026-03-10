@@ -6,7 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface CircuitRepository extends JpaRepository<Circuit, String> {
+
+    @Query("SELECT MAX(c.number) FROM Circuit c")
+    Optional<String> findMaxCode();
 
     @Query(value = """
             WITH last_status AS (

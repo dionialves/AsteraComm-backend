@@ -8,8 +8,6 @@ import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatus;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
-import com.dionialves.AsteraComm.asterisk.extension.Extension;
-import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.trunk.Trunk;
@@ -42,7 +40,7 @@ public class DevDataSeeder implements CommandLineRunner {
 
     private static final int TOTAL_CIRCUITOS = 10;
     private static final double PERCENTUAL_ONLINE = 0.80;
-    private static final String PREFIXO_NUMERO = "49334";
+    private static final long CODIGO_INICIAL = 100000L;
 
     private final CircuitRepository circuitRepository;
     private final TrunkRepository trunkRepository;
@@ -51,8 +49,6 @@ public class DevDataSeeder implements CommandLineRunner {
     private final EndpointRepository endpointRepository;
     private final EndpointStatusRepository endpointStatusRepository;
     private final UserRepository userRepository;
-    private final ExtensionRepository extensionRepository;
-
     private final Random random = new Random();
 
     @Override
@@ -74,7 +70,7 @@ public class DevDataSeeder implements CommandLineRunner {
         int offlineCount = 0;
 
         for (int i = 0; i < TOTAL_CIRCUITOS; i++) {
-            String number = gerarNumeroCliente(i);
+            String number = String.valueOf(CODIGO_INICIAL + i);
             String password = gerarSenhaAleatoria();
             boolean isOnline = random.nextDouble() < PERCENTUAL_ONLINE;
 
@@ -92,8 +88,6 @@ public class DevDataSeeder implements CommandLineRunner {
 
             Endpoint endpoint = criarEndpoint(number, auth, aor, trunk.getName());
             endpointRepository.save(endpoint);
-
-            criarExtensions(number, trunk.getName());
 
             EndpointStatus status = criarEndpointStatus(endpoint, isOnline);
             endpointStatusRepository.save(status);
@@ -121,10 +115,6 @@ public class DevDataSeeder implements CommandLineRunner {
 
         log.info("Tronco fictício criado: '{}'", trunk.getName());
         return trunk;
-    }
-
-    private String gerarNumeroCliente(int indice) {
-        return String.format("%s%05d", PREFIXO_NUMERO, indice + 1);
     }
 
     private String gerarSenhaAleatoria() {
@@ -182,25 +172,6 @@ public class DevDataSeeder implements CommandLineRunner {
         endpoint.setRtpSymmetric("yes");
         endpoint.setCallerid(number);
         return endpoint;
-    }
-
-    private void criarExtensions(String number, String trunkName) {
-        String pstnContext = "pstn-" + trunkName;
-
-        Extension dial = new Extension();
-        dial.setContext(pstnContext);
-        dial.setExten(number);
-        dial.setPriority(1);
-        dial.setApp("Dial");
-        dial.setAppdata("PJSIP/" + number + ",60");
-        extensionRepository.save(dial);
-
-        Extension hangup = new Extension();
-        hangup.setContext(pstnContext);
-        hangup.setExten(number);
-        hangup.setPriority(2);
-        hangup.setApp("Hangup");
-        extensionRepository.save(hangup);
     }
 
     private void criarUsuarioAdmin() {

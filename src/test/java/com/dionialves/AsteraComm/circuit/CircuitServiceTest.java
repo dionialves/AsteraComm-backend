@@ -2,7 +2,6 @@ package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
-import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ class CircuitServiceTest {
     @BeforeEach
     void setUp() {
         testCircuit = new Circuit();
-        testCircuit.setNumber("1001");
+        testCircuit.setNumber("100000");
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("opasuite");
     }
@@ -55,56 +54,57 @@ class CircuitServiceTest {
 
     @Test
     void findByNumber_shouldReturnCircuit_whenExists() {
-        when(circuitRepository.findById("1001")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
 
-        Optional<Circuit> result = circuitService.findByNumber("1001");
+        Optional<Circuit> result = circuitService.findByNumber("100000");
 
         assertThat(result).isPresent();
-        assertThat(result.get().getNumber()).isEqualTo("1001");
+        assertThat(result.get().getNumber()).isEqualTo("100000");
     }
 
     @Test
     void findByNumber_shouldReturnEmpty_whenNotExists() {
-        when(circuitRepository.findById("9999")).thenReturn(Optional.empty());
+        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
 
-        Optional<Circuit> result = circuitService.findByNumber("9999");
+        Optional<Circuit> result = circuitService.findByNumber("999999");
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void create_shouldSaveCircuitAndCallProvision() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("1002", "mypassword", "opasuite");
-        when(circuitRepository.existsById("1002")).thenReturn(false);
+    void create_shouldGenerateCodeStartingAt100000_whenNoCircuitsExist() {
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite");
+        when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
         when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
 
         circuitService.create(dto);
 
         verify(circuitRepository).save(argThat(c ->
-                c.getNumber().equals("1002")
+                c.getNumber().equals("100000")
                 && c.getPassword().equals("mypassword")
                 && c.getTrunkName().equals("opasuite")));
         verify(asteriskProvisioningService).provision(any(Circuit.class));
     }
 
     @Test
-    void create_shouldThrowBusinessException_whenNumberAlreadyExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("1001", "password", "opasuite");
-        when(circuitRepository.existsById("1001")).thenReturn(true);
+    void create_shouldIncrementCode_whenCircuitsExist() {
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite");
+        when(circuitRepository.findMaxCode()).thenReturn(Optional.of("100004"));
+        when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
 
-        assertThatThrownBy(() -> circuitService.create(dto))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Circuito já existe");
+        circuitService.create(dto);
+
+        verify(circuitRepository).save(argThat(c -> c.getNumber().equals("100005")));
     }
 
     @Test
     void update_shouldUpdatePasswordAndCallReprovision() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("1001", "newpassword", "opasuite");
+        CircuitCreateDTO dto = new CircuitCreateDTO("newpassword", "opasuite");
         testCircuit.setTrunkName("opasuite");
-        when(circuitRepository.findById("1001")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
         when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
 
-        circuitService.update("1001", dto);
+        circuitService.update("100000", dto);
 
         verify(circuitRepository).save(argThat(c -> c.getPassword().equals("newpassword")));
         verify(asteriskProvisioningService).reprovision(any(Circuit.class), eq("opasuite"));
@@ -112,19 +112,19 @@ class CircuitServiceTest {
 
     @Test
     void update_shouldThrowNotFoundException_whenNotExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("9999", "password", "opasuite");
-        when(circuitRepository.findById("9999")).thenReturn(Optional.empty());
+        CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite");
+        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> circuitService.update("9999", dto))
+        assertThatThrownBy(() -> circuitService.update("999999", dto))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Circuito não encontrado");
     }
 
     @Test
     void delete_shouldCallDeprovisionAndDeleteCircuit() {
-        when(circuitRepository.findById("1001")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
 
-        circuitService.delete("1001");
+        circuitService.delete("100000");
 
         verify(asteriskProvisioningService).deprovision(testCircuit);
         verify(circuitRepository).delete(testCircuit);
@@ -132,9 +132,9 @@ class CircuitServiceTest {
 
     @Test
     void delete_shouldThrowNotFoundException_whenNotExists() {
-        when(circuitRepository.findById("9999")).thenReturn(Optional.empty());
+        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> circuitService.delete("9999"))
+        assertThatThrownBy(() -> circuitService.delete("999999"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Circuito não encontrado");
     }
