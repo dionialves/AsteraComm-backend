@@ -1,5 +1,7 @@
 package com.dionialves.AsteraComm.did;
 
+import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
+import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
@@ -18,6 +20,7 @@ public class DIDService {
 
     private final DIDRepository didRepository;
     private final CircuitRepository circuitRepository;
+    private final AsteriskProvisioningService asteriskProvisioningService;
 
     public Page<DID> getAll(Pageable pageable) {
         return didRepository.findAll(pageable);
@@ -57,12 +60,13 @@ public class DIDService {
             throw new BusinessException("DID já está vinculado a um circuito");
         }
 
-        if (!circuitRepository.existsById(circuitNumber)) {
-            throw new NotFoundException("Circuito não encontrado");
-        }
+        Circuit circuit = circuitRepository.findById(circuitNumber)
+                .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
         did.setCircuitNumber(circuitNumber);
-        return didRepository.save(did);
+        DID saved = didRepository.save(did);
+        asteriskProvisioningService.provisionDid(saved, circuit);
+        return saved;
     }
 
     @Transactional
@@ -74,8 +78,13 @@ public class DIDService {
             throw new BusinessException("DID não está vinculado a nenhum circuito");
         }
 
+        Circuit circuit = circuitRepository.findById(did.getCircuitNumber())
+                .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
+
         did.setCircuitNumber(null);
-        return didRepository.save(did);
+        DID saved = didRepository.save(did);
+        asteriskProvisioningService.deprovisionDid(did.getNumber(), circuit.getTrunkName());
+        return saved;
     }
 
     @Transactional

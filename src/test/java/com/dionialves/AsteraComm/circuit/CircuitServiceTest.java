@@ -2,6 +2,8 @@ package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
+import com.dionialves.AsteraComm.did.DIDRepository;
+import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,9 @@ class CircuitServiceTest {
 
     @Mock
     private CircuitRepository circuitRepository;
+
+    @Mock
+    private DIDRepository didRepository;
 
     @Mock
     private AsteriskProvisioningService asteriskProvisioningService;
@@ -123,11 +128,24 @@ class CircuitServiceTest {
     @Test
     void delete_shouldCallDeprovisionAndDeleteCircuit() {
         when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(didRepository.existsByCircuitNumber("100000")).thenReturn(false);
 
         circuitService.delete("100000");
 
         verify(asteriskProvisioningService).deprovision(testCircuit);
         verify(circuitRepository).delete(testCircuit);
+    }
+
+    @Test
+    void delete_shouldThrowBusinessException_whenCircuitHasLinkedDids() {
+        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(didRepository.existsByCircuitNumber("100000")).thenReturn(true);
+
+        assertThatThrownBy(() -> circuitService.delete("100000"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("DID");
+
+        verifyNoInteractions(asteriskProvisioningService);
     }
 
     @Test

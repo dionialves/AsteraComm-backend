@@ -2,6 +2,8 @@ package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
+import com.dionialves.AsteraComm.did.DIDRepository;
+import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,7 @@ import java.util.Optional;
 public class CircuitService {
 
     private final CircuitRepository circuitRepository;
+    private final DIDRepository didRepository;
     private final AsteriskProvisioningService asteriskProvisioningService;
 
     public Page<CircuitProjection> getAll(String search, Pageable pageable) {
@@ -63,6 +66,10 @@ public class CircuitService {
     public void delete(String number) {
         Circuit circuit = circuitRepository.findById(number)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
+
+        if (didRepository.existsByCircuitNumber(number)) {
+            throw new BusinessException("Circuito possui DID(s) vinculado(s). Desvincule os DIDs antes de excluir.");
+        }
 
         asteriskProvisioningService.deprovision(circuit);
         circuitRepository.delete(circuit);

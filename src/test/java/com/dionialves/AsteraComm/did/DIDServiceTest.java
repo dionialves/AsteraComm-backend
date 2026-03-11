@@ -1,5 +1,7 @@
 package com.dionialves.AsteraComm.did;
 
+import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
+import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
@@ -29,10 +31,14 @@ class DIDServiceTest {
     @Mock
     private CircuitRepository circuitRepository;
 
+    @Mock
+    private AsteriskProvisioningService asteriskProvisioningService;
+
     @InjectMocks
     private DIDService didService;
 
     private DID testDID;
+    private Circuit testCircuit;
 
     @BeforeEach
     void setUp() {
@@ -40,6 +46,10 @@ class DIDServiceTest {
         testDID.setId(1L);
         testDID.setNumber("4933001234");
         testDID.setCircuitNumber(null);
+
+        testCircuit = new Circuit();
+        testCircuit.setNumber("100000");
+        testCircuit.setTrunkName("provedor1");
     }
 
     // --- getAll ---
@@ -126,14 +136,15 @@ class DIDServiceTest {
     // --- linkToCircuit ---
 
     @Test
-    void linkToCircuit_shouldSetCircuitNumber_whenDIDFreeAndCircuitExists() {
+    void linkToCircuit_shouldSetCircuitNumberAndProvisionDid_whenDIDFreeAndCircuitExists() {
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
-        when(circuitRepository.existsById("100000")).thenReturn(true);
+        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.save(any(DID.class))).thenReturn(testDID);
 
-        DID result = didService.linkToCircuit(1L, "100000");
+        didService.linkToCircuit(1L, "100000");
 
         verify(didRepository).save(argThat(d -> "100000".equals(d.getCircuitNumber())));
+        verify(asteriskProvisioningService).provisionDid(any(DID.class), eq(testCircuit));
     }
 
     @Test
@@ -144,29 +155,46 @@ class DIDServiceTest {
         assertThatThrownBy(() -> didService.linkToCircuit(1L, "100001"))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("já está vinculado");
+
+        verifyNoInteractions(asteriskProvisioningService);
     }
 
     @Test
     void linkToCircuit_shouldThrowNotFoundException_whenCircuitNotExists() {
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
-        when(circuitRepository.existsById("999999")).thenReturn(false);
+        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> didService.linkToCircuit(1L, "999999"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Circuito não encontrado");
+
+        verifyNoInteractions(asteriskProvisioningService);
+    }
+
+    @Test
+    void linkToCircuit_shouldThrowNotFoundException_whenDIDNotExists() {
+        when(didRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> didService.linkToCircuit(99L, "100000"))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("DID não encontrado");
+
+        verifyNoInteractions(asteriskProvisioningService);
     }
 
     // --- unlinkFromCircuit ---
 
     @Test
-    void unlinkFromCircuit_shouldClearCircuitNumber_whenLinked() {
+    void unlinkFromCircuit_shouldClearCircuitNumberAndDeprovisionDid_whenLinked() {
         testDID.setCircuitNumber("100000");
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
+        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.save(any(DID.class))).thenReturn(testDID);
 
         didService.unlinkFromCircuit(1L);
 
         verify(didRepository).save(argThat(d -> d.getCircuitNumber() == null));
+        verify(asteriskProvisioningService).deprovisionDid("4933001234", "provedor1");
     }
 
     @Test
@@ -176,6 +204,19 @@ class DIDServiceTest {
         assertThatThrownBy(() -> didService.unlinkFromCircuit(1L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("não está vinculado");
+
+        verifyNoInteractions(asteriskProvisioningService);
+    }
+
+    @Test
+    void unlinkFromCircuit_shouldThrowNotFoundException_whenDIDNotExists() {
+        when(didRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> didService.unlinkFromCircuit(99L))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("DID não encontrado");
+
+        verifyNoInteractions(asteriskProvisioningService);
     }
 
     // --- delete ---

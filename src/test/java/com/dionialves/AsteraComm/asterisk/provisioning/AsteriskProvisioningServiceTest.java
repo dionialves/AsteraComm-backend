@@ -12,6 +12,7 @@ import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
 import com.dionialves.AsteraComm.asterisk.registration.PsRegistration;
 import com.dionialves.AsteraComm.asterisk.registration.PsRegistrationRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
+import com.dionialves.AsteraComm.did.DID;
 import com.dionialves.AsteraComm.trunk.Trunk;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,7 @@ class AsteriskProvisioningServiceTest {
 
     private Circuit testCircuit;
     private Trunk testTrunk;
+    private DID testDID;
 
     @BeforeEach
     void setUp() {
@@ -64,6 +66,11 @@ class AsteriskProvisioningServiceTest {
         testCircuit.setNumber("100000");
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("provedor1");
+
+        testDID = new DID();
+        testDID.setId(1L);
+        testDID.setNumber("4933001234");
+        testDID.setCircuitNumber("100000");
 
         testTrunk = new Trunk();
         testTrunk.setName("provedor1");
@@ -304,5 +311,60 @@ class AsteriskProvisioningServiceTest {
         asteriskProvisioningService.reprovisionTrunk(testTrunk);
 
         verify(dialplanGeneratorService, never()).generateAndReload();
+    }
+
+    // === DID provisioning ===
+
+    @Test
+    void provisionDid_shouldCreate2ExtensionsInPstnContext() {
+        asteriskProvisioningService.provisionDid(testDID, testCircuit);
+
+        verify(extensionRepository, times(2)).save(any());
+        verify(extensionRepository).save(argThat(e ->
+                e.getContext().equals("pstn-provedor1")
+                && e.getExten().equals("4933001234")
+                && e.getPriority() == 1
+                && e.getApp().equals("Dial")
+                && e.getAppdata().contains("100000")));
+        verify(extensionRepository).save(argThat(e ->
+                e.getContext().equals("pstn-provedor1")
+                && e.getExten().equals("4933001234")
+                && e.getPriority() == 2
+                && e.getApp().equals("Hangup")));
+    }
+
+    @Test
+    void provisionDid_shouldSendDialplanReload() {
+        asteriskProvisioningService.provisionDid(testDID, testCircuit);
+
+        verify(amiService).sendCommand("dialplan reload");
+    }
+
+    @Test
+    void provisionDid_shouldNotSendPjsipReload() {
+        asteriskProvisioningService.provisionDid(testDID, testCircuit);
+
+        verify(amiService, never()).sendCommand("pjsip reload");
+    }
+
+    @Test
+    void deprovisionDid_shouldDeleteExtensionsByExtenAndContext() {
+        asteriskProvisioningService.deprovisionDid("4933001234", "provedor1");
+
+        verify(extensionRepository).deleteByExtenAndContext("4933001234", "pstn-provedor1");
+    }
+
+    @Test
+    void deprovisionDid_shouldSendDialplanReload() {
+        asteriskProvisioningService.deprovisionDid("4933001234", "provedor1");
+
+        verify(amiService).sendCommand("dialplan reload");
+    }
+
+    @Test
+    void deprovisionDid_shouldNotSendPjsipReload() {
+        asteriskProvisioningService.deprovisionDid("4933001234", "provedor1");
+
+        verify(amiService, never()).sendCommand("pjsip reload");
     }
 }

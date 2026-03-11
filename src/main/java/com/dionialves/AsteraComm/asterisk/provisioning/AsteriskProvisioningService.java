@@ -13,6 +13,7 @@ import com.dionialves.AsteraComm.asterisk.extension.ExtensionRepository;
 import com.dionialves.AsteraComm.asterisk.registration.PsRegistration;
 import com.dionialves.AsteraComm.asterisk.registration.PsRegistrationRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
+import com.dionialves.AsteraComm.did.DID;
 import com.dionialves.AsteraComm.trunk.Trunk;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -187,6 +188,40 @@ public class AsteriskProvisioningService {
 
         amiService.sendCommand("pjsip reload");
         dialplanGeneratorService.generateAndReload();
+    }
+
+    // =========================================================
+    // DID provisioning
+    // =========================================================
+
+    @Transactional
+    public void provisionDid(DID did, Circuit circuit) {
+        String context = "pstn-" + circuit.getTrunkName();
+        String exten = did.getNumber();
+        String circuitNumber = circuit.getNumber();
+
+        Extension dial = new Extension();
+        dial.setContext(context);
+        dial.setExten(exten);
+        dial.setPriority(1);
+        dial.setApp("Dial");
+        dial.setAppdata("PJSIP/" + circuitNumber + ",60");
+        extensionRepository.save(dial);
+
+        Extension hangup = new Extension();
+        hangup.setContext(context);
+        hangup.setExten(exten);
+        hangup.setPriority(2);
+        hangup.setApp("Hangup");
+        extensionRepository.save(hangup);
+
+        amiService.sendCommand("dialplan reload");
+    }
+
+    @Transactional
+    public void deprovisionDid(String didNumber, String trunkName) {
+        extensionRepository.deleteByExtenAndContext(didNumber, "pstn-" + trunkName);
+        amiService.sendCommand("dialplan reload");
     }
 
     private void createOutboundExtensions(Trunk trunk) {
