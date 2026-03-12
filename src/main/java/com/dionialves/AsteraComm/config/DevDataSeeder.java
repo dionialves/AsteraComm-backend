@@ -8,6 +8,8 @@ import com.dionialves.AsteraComm.asterisk.endpoint.Endpoint;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointRepository;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatus;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
+import com.dionialves.AsteraComm.cdr.CdrRecord;
+import com.dionialves.AsteraComm.cdr.CdrRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.Customer;
@@ -44,6 +46,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private static final double PERCENTUAL_ONLINE = 0.80;
     private static final long CODIGO_INICIAL = 100000L;
 
+    private final CdrRepository cdrRepository;
     private final CircuitRepository circuitRepository;
     private final CustomerRepository customerRepository;
     private final TrunkRepository trunkRepository;
@@ -103,6 +106,53 @@ public class DevDataSeeder implements CommandLineRunner {
 
         log.info("Seed finalizado! Circuitos: {} | Online: {} | Offline: {}",
                 TOTAL_CIRCUITOS, onlineCount, offlineCount);
+
+        criarCdrs(trunk.getName());
+    }
+
+    private void criarCdrs(String trunkName) {
+        if (cdrRepository.count() > 0) return;
+
+        String[] dispositions = {"ANSWERED", "ANSWERED", "ANSWERED", "ANSWERED", "ANSWERED",
+                                 "ANSWERED", "ANSWERED", "NO ANSWER", "NO ANSWER", "BUSY"};
+        String[] dstPrefixes = {"11", "21", "31", "41", "51", "61", "71", "81", "91"};
+
+        for (int i = 0; i < 50; i++) {
+            String src = String.valueOf(CODIGO_INICIAL + random.nextInt(TOTAL_CIRCUITOS));
+            String dstArea = dstPrefixes[random.nextInt(dstPrefixes.length)];
+            String dst = dstArea + String.format("%08d", random.nextInt(100000000));
+            String disposition = dispositions[random.nextInt(dispositions.length)];
+
+            int duration = disposition.equals("ANSWERED")
+                    ? 30 + random.nextInt(570)
+                    : 5 + random.nextInt(25);
+            int billsec = disposition.equals("ANSWERED") ? duration : 0;
+
+            LocalDateTime calldate = LocalDateTime.now()
+                    .minusDays(random.nextInt(90))
+                    .minusHours(random.nextInt(24))
+                    .minusMinutes(random.nextInt(60));
+
+            CdrRecord cdr = new CdrRecord();
+            cdr.setUniqueId(String.valueOf(System.nanoTime() + i));
+            cdr.setCalldate(calldate);
+            cdr.setClid("\"" + src + "\" <" + src + ">");
+            cdr.setSrc(src);
+            cdr.setDst(dst);
+            cdr.setDcontext("internal-" + trunkName);
+            cdr.setChannel("PJSIP/" + src + "-" + String.format("%08x", random.nextInt()));
+            cdr.setDstchannel("PJSIP/" + trunkName + "-" + String.format("%08x", random.nextInt()));
+            cdr.setLastapp("Dial");
+            cdr.setLastdata(dst);
+            cdr.setDuration(duration);
+            cdr.setBillsec(billsec);
+            cdr.setDisposition(disposition);
+            cdr.setAmaflags(3);
+
+            cdrRepository.save(cdr);
+        }
+
+        log.info("50 registros CDR criados.");
     }
 
     private Customer criarClienteDev() {
