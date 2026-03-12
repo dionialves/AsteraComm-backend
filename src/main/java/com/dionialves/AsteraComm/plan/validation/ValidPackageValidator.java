@@ -1,6 +1,5 @@
 package com.dionialves.AsteraComm.plan.validation;
 
-import com.dionialves.AsteraComm.plan.PackageType;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

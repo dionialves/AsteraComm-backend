@@ -2,24 +2,18 @@ package com.dionialves.AsteraComm.infra.security;
 
 import com.dionialves.AsteraComm.auth.AuthenticationController;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
-import com.dionialves.AsteraComm.user.User;
 import com.dionialves.AsteraComm.user.UserRepository;
-import com.dionialves.AsteraComm.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -66,7 +60,7 @@ class SecurityConfigurationsTest {
         when(tokenService.validateToken("bad")).thenReturn("");
 
         mockMvc.perform(post("/api/auth/validate")
-                        .header("Authorization", "Bearer bad"))
+                .header("Authorization", "Bearer bad"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -75,14 +69,14 @@ class SecurityConfigurationsTest {
         when(tokenService.validateToken("good-token")).thenReturn("user@test.com");
 
         mockMvc.perform(post("/api/auth/validate")
-                        .header("Authorization", "Bearer good-token"))
+                .header("Authorization", "Bearer good-token"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void validateEndpoint_shouldReturn401_whenMissingBearerPrefix() throws Exception {
         mockMvc.perform(post("/api/auth/validate")
-                        .header("Authorization", "not-a-bearer-token"))
+                .header("Authorization", "not-a-bearer-token"))
                 .andExpect(status().isUnauthorized());
     }
 }
