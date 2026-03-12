@@ -1,48 +1,34 @@
 package com.dionialves.AsteraComm.asterisk.endpoint;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.asteriskjava.manager.AuthenticationFailedException;
-import org.asteriskjava.manager.ManagerConnection;
-import org.asteriskjava.manager.ManagerConnectionFactory;
-import org.asteriskjava.manager.TimeoutException;
-import org.asteriskjava.manager.action.CommandAction;
+import com.dionialves.AsteraComm.asterisk.provisioning.AmiService;
 import org.asteriskjava.manager.response.CommandResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EndpointStatusService {
 
-    @Value("${asterisk.hostname}")
-    private String hostname;
-
-    @Value("${asterisk.port}")
-    private int port;
-
-    @Value("${asterisk.username}")
-    private String username;
-
-    @Value("${asterisk.password}")
-    private String password;
-
     private final EndpointFactory endpointFactory;
     private final EndpointStatusRepository endpointStatusRepository;
+    private final AmiService amiService;
 
     @Autowired
-    public EndpointStatusService(EndpointFactory endpointFactory, EndpointStatusRepository endpointStatusRepository) {
+    public EndpointStatusService(EndpointFactory endpointFactory,
+                                 EndpointStatusRepository endpointStatusRepository,
+                                 AmiService amiService) {
         this.endpointFactory = endpointFactory;
         this.endpointStatusRepository = endpointStatusRepository;
+        this.amiService = amiService;
     }
 
     @Scheduled(fixedRateString = "${asterisk.status.interval.ms}")
     public void getStatusFromAsterisk() {
-        CommandResponse response = this.getContactsFromAsterisk();
+        CommandResponse response = amiService.sendCommandWithResponse("pjsip show contacts");
 
         if (response == null) {
             System.err.println("Failed to get response from asterisk");
@@ -52,25 +38,6 @@ public class EndpointStatusService {
         List<EndpointStatus> listEndpointStatus = this.getEndpointStatus(response.getResult());
 
         this.saveEndpointStatus(listEndpointStatus);
-    }
-
-    private CommandResponse getContactsFromAsterisk() {
-
-        try {
-            ManagerConnectionFactory factory = new ManagerConnectionFactory(hostname, port, username, password);
-            ManagerConnection connection = factory.createManagerConnection();
-
-            connection.login();
-            CommandAction action = new CommandAction("pjsip show contacts");
-            CommandResponse response = (CommandResponse) connection.sendAction(action);
-            connection.logoff();
-
-            return response;
-
-        } catch (IOException | AuthenticationFailedException | TimeoutException e) {
-            System.err.println("Error on connecting Asterisk: " + e.getMessage());
-            return null;
-        }
     }
 
     private List<EndpointStatus> getEndpointStatus(List<String> response) {

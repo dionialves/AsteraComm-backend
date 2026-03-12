@@ -1,5 +1,7 @@
 package com.dionialves.AsteraComm.asterisk.endpoint;
 
+import com.dionialves.AsteraComm.asterisk.provisioning.AmiService;
+import org.asteriskjava.manager.response.CommandResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,9 @@ class EndpointStatusServiceTest {
     @Mock
     private EndpointStatusRepository endpointStatusRepository;
 
+    @Mock
+    private AmiService amiService;
+
     @InjectMocks
     private EndpointStatusService endpointStatusService;
 
@@ -32,10 +37,30 @@ class EndpointStatusServiceTest {
     void setUp() {
         testEndpoint = new Endpoint();
         testEndpoint.setId("1001");
-        ReflectionTestUtils.setField(endpointStatusService, "hostname", "localhost");
-        ReflectionTestUtils.setField(endpointStatusService, "port", 5038);
-        ReflectionTestUtils.setField(endpointStatusService, "username", "admin");
-        ReflectionTestUtils.setField(endpointStatusService, "password", "admin");
+    }
+
+    @Test
+    void getStatusFromAsterisk_shouldDoNothing_whenAmiReturnsNull() {
+        when(amiService.sendCommandWithResponse("pjsip show contacts")).thenReturn(null);
+
+        endpointStatusService.getStatusFromAsterisk();
+
+        verifyNoInteractions(endpointStatusRepository);
+    }
+
+    @Test
+    void getStatusFromAsterisk_shouldSaveStatuses_whenAmiReturnsValidResponse() {
+        CommandResponse response = mock(CommandResponse.class);
+        when(response.getResult()).thenReturn(List.of(
+                "  Contact:  1001/sip:1001@192.168.1.1:5060  Avail  1.5"
+        ));
+        when(amiService.sendCommandWithResponse("pjsip show contacts")).thenReturn(response);
+        when(endpointFactory.getById("1001")).thenReturn(testEndpoint);
+
+        endpointStatusService.getStatusFromAsterisk();
+
+        verify(endpointStatusRepository).deleteAll();
+        verify(endpointStatusRepository, times(1)).save(any(EndpointStatus.class));
     }
 
     @Test
