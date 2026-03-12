@@ -10,6 +10,8 @@ import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatus;
 import com.dionialves.AsteraComm.asterisk.endpoint.EndpointStatusRepository;
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
+import com.dionialves.AsteraComm.customer.Customer;
+import com.dionialves.AsteraComm.customer.CustomerRepository;
 import com.dionialves.AsteraComm.trunk.Trunk;
 import com.dionialves.AsteraComm.trunk.TrunkRepository;
 import com.dionialves.AsteraComm.user.User;
@@ -43,6 +45,7 @@ public class DevDataSeeder implements CommandLineRunner {
     private static final long CODIGO_INICIAL = 100000L;
 
     private final CircuitRepository circuitRepository;
+    private final CustomerRepository customerRepository;
     private final TrunkRepository trunkRepository;
     private final AuthRepository authRepository;
     private final AorRepository aorRepository;
@@ -63,6 +66,7 @@ public class DevDataSeeder implements CommandLineRunner {
         criarUsuarioAdmin();
 
         Trunk trunk = criarTronco();
+        Customer customer = criarClienteDev();
 
         log.info("Criando {} circuitos vinculados ao tronco '{}'...", TOTAL_CIRCUITOS, trunk.getName());
 
@@ -78,6 +82,7 @@ public class DevDataSeeder implements CommandLineRunner {
             circuit.setNumber(number);
             circuit.setPassword(password);
             circuit.setTrunkName(trunk.getName());
+            circuit.setCustomer(customer);
             circuitRepository.save(circuit);
 
             Auth auth = criarAuth(number, password);
@@ -98,6 +103,22 @@ public class DevDataSeeder implements CommandLineRunner {
 
         log.info("Seed finalizado! Circuitos: {} | Online: {} | Offline: {}",
                 TOTAL_CIRCUITOS, onlineCount, offlineCount);
+    }
+
+    private Customer criarClienteDev() {
+        return customerRepository.findAll().stream()
+                .filter(c -> c.getName().equals("Cliente Dev"))
+                .findFirst()
+                .orElseGet(() -> {
+                    Customer customer = new Customer();
+                    customer.setName("Cliente Dev");
+                    customer.setEnabled(true);
+                    customer.setCreatedAt(LocalDateTime.now());
+                    customer.setUpdatedAt(LocalDateTime.now());
+                    Customer saved = customerRepository.save(customer);
+                    log.info("Cliente fictício criado: '{}'", saved.getName());
+                    return saved;
+                });
     }
 
     private Trunk criarTronco() {

@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
+import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,10 +40,15 @@ class CircuitControllerTest {
 
     @BeforeEach
     void setUp() {
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setName("Acme Corp");
+
         testCircuit = new Circuit();
         testCircuit.setNumber("100000");
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("opasuite");
+        testCircuit.setCustomer(customer);
 
         mockMvc = MockMvcBuilders.standaloneSetup(circuitController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -94,7 +100,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(post("/api/circuits")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\"}"))
+                        .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -104,7 +110,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(put("/api/circuits/100000")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\"}"))
+                        .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isOk());
     }
 
@@ -115,7 +121,7 @@ class CircuitControllerTest {
 
         mockMvc.perform(put("/api/circuits/999999")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\"}"))
+                        .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isNotFound());
     }
 
