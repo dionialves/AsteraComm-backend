@@ -14,6 +14,11 @@ import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.customer.CustomerRepository;
+import com.dionialves.AsteraComm.did.DID;
+import com.dionialves.AsteraComm.did.DIDRepository;
+import com.dionialves.AsteraComm.plan.PackageType;
+import com.dionialves.AsteraComm.plan.Plan;
+import com.dionialves.AsteraComm.plan.PlanRepository;
 import com.dionialves.AsteraComm.trunk.Trunk;
 import com.dionialves.AsteraComm.trunk.TrunkRepository;
 import com.dionialves.AsteraComm.user.User;
@@ -28,6 +33,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Random;
 
@@ -45,10 +51,21 @@ public class DevDataSeeder implements CommandLineRunner {
     private static final int TOTAL_CIRCUITOS = 10;
     private static final double PERCENTUAL_ONLINE = 0.80;
     private static final long CODIGO_INICIAL = 100000L;
+    private static final long DID_INICIAL = 4933333333L;
+    private static final long DID_INCREMENTO = 1111L;
+
+    private static final String[] NOMES_CLIENTES = {
+        "Acme Telecom Ltda", "Beta Comunicações", "Conecta Fácil ME",
+        "Delta Phones", "Estrela Net", "Fone Rápido SA",
+        "Globo Connect", "Horizonte Telecom", "Inova VoIP",
+        "Jovem Telecom"
+    };
 
     private final CdrRepository cdrRepository;
     private final CircuitRepository circuitRepository;
     private final CustomerRepository customerRepository;
+    private final PlanRepository planRepository;
+    private final DIDRepository didRepository;
     private final TrunkRepository trunkRepository;
     private final AuthRepository authRepository;
     private final AorRepository aorRepository;
@@ -69,7 +86,7 @@ public class DevDataSeeder implements CommandLineRunner {
         criarUsuarioAdmin();
 
         Trunk trunk = criarTronco();
-        Customer customer = criarClienteDev();
+        Plan plan = criarPlanoDev();
 
         log.info("Criando {} circuitos vinculados ao tronco '{}'...", TOTAL_CIRCUITOS, trunk.getName());
 
@@ -81,12 +98,18 @@ public class DevDataSeeder implements CommandLineRunner {
             String password = gerarSenhaAleatoria();
             boolean isOnline = random.nextDouble() < PERCENTUAL_ONLINE;
 
+            Customer customer = criarCliente(NOMES_CLIENTES[i]);
+
             Circuit circuit = new Circuit();
             circuit.setNumber(number);
             circuit.setPassword(password);
             circuit.setTrunkName(trunk.getName());
             circuit.setCustomer(customer);
+            circuit.setPlan(plan);
             circuitRepository.save(circuit);
+
+            String didNumber = String.valueOf(DID_INICIAL + (long) i * DID_INCREMENTO);
+            criarDid(didNumber, number);
 
             Auth auth = criarAuth(number, password);
             authRepository.save(auth);
@@ -155,20 +178,46 @@ public class DevDataSeeder implements CommandLineRunner {
         log.info("50 registros CDR criados.");
     }
 
-    private Customer criarClienteDev() {
+    private Customer criarCliente(String nome) {
         return customerRepository.findAll().stream()
-                .filter(c -> c.getName().equals("Cliente Dev"))
+                .filter(c -> c.getName().equals(nome))
                 .findFirst()
                 .orElseGet(() -> {
                     Customer customer = new Customer();
-                    customer.setName("Cliente Dev");
+                    customer.setName(nome);
                     customer.setEnabled(true);
                     customer.setCreatedAt(LocalDateTime.now());
                     customer.setUpdatedAt(LocalDateTime.now());
-                    Customer saved = customerRepository.save(customer);
-                    log.info("Cliente fictício criado: '{}'", saved.getName());
+                    return customerRepository.save(customer);
+                });
+    }
+
+    private Plan criarPlanoDev() {
+        return planRepository.findAll().stream()
+                .filter(p -> p.getName().equals("Plano Dev"))
+                .findFirst()
+                .orElseGet(() -> {
+                    Plan plan = new Plan();
+                    plan.setName("Plano Dev");
+                    plan.setMonthlyPrice(new BigDecimal("99.90"));
+                    plan.setFixedLocal(new BigDecimal("0.0600"));
+                    plan.setFixedLongDistance(new BigDecimal("0.1200"));
+                    plan.setMobileLocal(new BigDecimal("0.3500"));
+                    plan.setMobileLongDistance(new BigDecimal("0.4500"));
+                    plan.setPackageType(PackageType.UNIFIED);
+                    plan.setPackageTotalMinutes(100);
+                    Plan saved = planRepository.save(plan);
+                    log.info("Plano de desenvolvimento criado: '{}'", saved.getName());
                     return saved;
                 });
+    }
+
+    private void criarDid(String number, String circuitNumber) {
+        if (didRepository.existsByNumber(number)) return;
+        DID did = new DID();
+        did.setNumber(number);
+        did.setCircuitNumber(circuitNumber);
+        didRepository.save(did);
     }
 
     private Trunk criarTronco() {

@@ -7,6 +7,8 @@ import com.dionialves.AsteraComm.customer.CustomerRepository;
 import com.dionialves.AsteraComm.did.DIDRepository;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
+import com.dionialves.AsteraComm.plan.Plan;
+import com.dionialves.AsteraComm.plan.PlanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ public class CircuitService {
     private final CircuitRepository circuitRepository;
     private final DIDRepository didRepository;
     private final CustomerRepository customerRepository;
+    private final PlanRepository planRepository;
     private final AsteriskProvisioningService asteriskProvisioningService;
 
     public Page<CircuitProjection> getAll(String search, Pageable pageable) {
@@ -46,6 +49,7 @@ public class CircuitService {
         circuit.setPassword(dto.password());
         circuit.setTrunkName(dto.trunkName());
         circuit.setCustomer(customer);
+        circuit.setPlan(resolvePlan(dto.planId()));
         Circuit saved = circuitRepository.save(circuit);
 
         asteriskProvisioningService.provision(saved);
@@ -66,6 +70,7 @@ public class CircuitService {
         circuit.setPassword(dto.password());
         circuit.setTrunkName(dto.trunkName());
         circuit.setCustomer(customer);
+        circuit.setPlan(resolvePlan(dto.planId()));
         Circuit saved = circuitRepository.save(circuit);
 
         asteriskProvisioningService.reprovision(saved, previousTrunkName);
@@ -84,5 +89,11 @@ public class CircuitService {
 
         asteriskProvisioningService.deprovision(circuit);
         circuitRepository.delete(circuit);
+    }
+
+    private Plan resolvePlan(Long planId) {
+        if (planId == null) throw new BusinessException("Plano é obrigatório para o circuito");
+        return planRepository.findById(planId)
+                .orElseThrow(() -> new NotFoundException("Plano não encontrado"));
     }
 }

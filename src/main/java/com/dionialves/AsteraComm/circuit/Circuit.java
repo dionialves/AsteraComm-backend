@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.customer.Customer;
+import com.dionialves.AsteraComm.plan.Plan;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,4 +29,8 @@ public class Circuit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "plan_id", nullable = false)
+    private Plan plan;
 }

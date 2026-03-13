@@ -5,6 +5,7 @@ public interface CircuitProjection {
     String getPassword();
     String getTrunkName();
     String getCustomerName();
+    String getPlanName();
     String getIp();
     String getRtt();
     boolean isOnline();

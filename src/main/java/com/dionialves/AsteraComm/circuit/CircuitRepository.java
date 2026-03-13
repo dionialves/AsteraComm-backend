@@ -27,11 +27,13 @@ public interface CircuitRepository extends JpaRepository<Circuit, String> {
                 c.password      AS password,
                 c.trunk_name    AS trunkName,
                 cu.name         AS customerName,
+                p.name          AS planName,
                 s.ip            AS ip,
                 s.rtt           AS rtt,
                 CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online
             FROM asteracomm_circuits c
             JOIN asteracomm_customers cu ON cu.id = c.customer_id
+            LEFT JOIN asteracomm_plans p ON p.id = c.plan_id
             LEFT JOIN last_status s ON s.endpoint = c.number
             WHERE LOWER(c.number) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(cu.name) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -46,6 +48,7 @@ public interface CircuitRepository extends JpaRepository<Circuit, String> {
             SELECT COUNT(*)
             FROM asteracomm_circuits c
             JOIN asteracomm_customers cu ON cu.id = c.customer_id
+            LEFT JOIN asteracomm_plans p ON p.id = c.plan_id
             LEFT JOIN last_status s ON s.endpoint = c.number
             WHERE LOWER(c.number) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(cu.name) LIKE LOWER(CONCAT('%', :search, '%'))
