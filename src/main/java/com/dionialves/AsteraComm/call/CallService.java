@@ -15,9 +15,9 @@ public class CallService {
     private final CallRepository callRepository;
 
     public Page<Call> getAll(String callerNumber, String dst, String disposition,
-                             LocalDateTime from, LocalDateTime to, Pageable pageable) {
+                             LocalDateTime from, LocalDateTime to, String circuitNumber, Pageable pageable) {
         return callRepository.findAll(
-                CallSpec.withFilters(callerNumber, dst, disposition, from, to),
+                CallSpec.withFilters(callerNumber, dst, disposition, from, to, circuitNumber),
                 pageable
         );
     }

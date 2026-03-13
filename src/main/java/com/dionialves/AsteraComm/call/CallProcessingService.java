@@ -2,6 +2,7 @@ package com.dionialves.AsteraComm.call;
 
 import com.dionialves.AsteraComm.cdr.CdrRecord;
 import com.dionialves.AsteraComm.cdr.CdrRepository;
+import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,8 @@ public class CallProcessingService {
     private final CallRepository callRepository;
     private final CallerIdParser callerIdParser;
     private final CallTypeClassifier callTypeClassifier;
+    private final CircuitRepository circuitRepository;
+    private final ChannelParser channelParser;
 
     @Scheduled(fixedRateString = "${call.processing.interval.ms}")
     public void process() {
@@ -32,6 +35,10 @@ public class CallProcessingService {
             call.setDisposition(cdr.getDisposition());
             call.setCallType(callTypeClassifier.classify(cdr.getDst()));
             call.setProcessedAt(LocalDateTime.now());
+            String circuitCode = channelParser.parse(cdr.getChannel());
+            if (!circuitCode.isEmpty()) {
+                circuitRepository.findById(circuitCode).ifPresent(call::setCircuit);
+            }
             callRepository.save(call);
         }
     }

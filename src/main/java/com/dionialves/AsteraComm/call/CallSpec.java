@@ -1,5 +1,6 @@
 package com.dionialves.AsteraComm.call;
 
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -12,7 +13,7 @@ public class CallSpec {
     private CallSpec() {}
 
     public static Specification<Call> withFilters(String callerNumber, String dst, String disposition,
-                                                  LocalDateTime from, LocalDateTime to) {
+                                                  LocalDateTime from, LocalDateTime to, String circuitNumber) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -30,6 +31,12 @@ public class CallSpec {
             }
             if (to != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("callDate"), to));
+            }
+            if (circuitNumber != null && !circuitNumber.isBlank()) {
+                predicates.add(cb.like(
+                        root.join("circuit", JoinType.LEFT).get("number"),
+                        "%" + circuitNumber + "%"
+                ));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

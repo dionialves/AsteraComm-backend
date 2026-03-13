@@ -25,8 +25,9 @@ public class CallController {
             @RequestParam(required = false) String disposition,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(required = false) String circuitNumber,
             @PageableDefault(size = 20, sort = "callDate", direction = Sort.Direction.DESC) Pageable pageable) {
-        return callService.getAll(src, dst, disposition, from, to, pageable);
+        return callService.getAll(src, dst, disposition, from, to, circuitNumber, pageable);
     }
 
     @GetMapping("/{uniqueid:.+}")

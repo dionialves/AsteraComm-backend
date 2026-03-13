@@ -1,5 +1,7 @@
 package com.dionialves.AsteraComm.call;
 
+import com.dionialves.AsteraComm.circuit.Circuit;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,4 +47,9 @@ public class Call {
 
     @Column(name = "processed_at", nullable = false)
     private LocalDateTime processedAt;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "circuit_number")
+    @JsonIgnoreProperties({"customer", "password", "hibernateLazyInitializer", "handler"})
+    private Circuit circuit;
 }
