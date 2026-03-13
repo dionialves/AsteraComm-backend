@@ -26,43 +26,43 @@ public class CdrRecord {
     @JsonProperty("uniqueid")
     private String uniqueId;
 
-    @Column(name = "calldate")
+    @Column(name = "calldate", nullable = false)
     private LocalDateTime calldate;
 
-    @Column(name = "clid")
+    @Column(name = "clid", nullable = false)
     private String clid;
 
-    @Column(name = "src")
+    @Column(name = "src", nullable = false)
     private String src;
 
-    @Column(name = "dst")
+    @Column(name = "dst", nullable = false)
     private String dst;
 
-    @Column(name = "dcontext")
+    @Column(name = "dcontext", nullable = false)
     private String dcontext;
 
-    @Column(name = "channel")
+    @Column(name = "channel", nullable = false)
     private String channel;
 
-    @Column(name = "dstchannel")
+    @Column(name = "dstchannel", nullable = false)
     private String dstchannel;
 
-    @Column(name = "lastapp")
+    @Column(name = "lastapp", nullable = false)
     private String lastapp;
 
-    @Column(name = "lastdata")
+    @Column(name = "lastdata", nullable = false)
     private String lastdata;
 
-    @Column(name = "duration")
+    @Column(name = "duration", nullable = false)
     private Integer duration;
 
-    @Column(name = "billsec")
+    @Column(name = "billsec", nullable = false)
     private Integer billsec;
 
-    @Column(name = "disposition")
+    @Column(name = "disposition", nullable = false)
     private String disposition;
 
-    @Column(name = "amaflags")
+    @Column(name = "amaflags", nullable = false)
     private Integer amaflags;
 
     @Column(name = "accountcode")

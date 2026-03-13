@@ -28,16 +28,17 @@ public class EndpointStatus {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "endpoint", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "endpoint", referencedColumnName = "id", nullable = false)
     private Endpoint endpoint;
 
+    @Column(name = "online", nullable = false)
     private boolean online;
 
     private String ip;
     private String rtt;
 
-    @Column(name = "checked_at")
+    @Column(name = "checked_at", nullable = false)
     private LocalDateTime checkedAt;
 
     public EndpointStatus(Endpoint endpoint, boolean online, String ip, String rtt, LocalDateTime checkedAt) {
