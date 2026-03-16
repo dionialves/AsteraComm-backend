@@ -69,13 +69,13 @@ public class CallCostingService {
         int used = fetchUsedMinutes(plan, call.getCallType(), call.getCircuit(), callRepository,
                 callMonth, callYear);
         int remaining = quota - used;
-        int durationMinutes = (int) Math.ceil(billSeconds / 60.0);
+        int durationFractions = (int) Math.ceil(billSeconds / 30.0);
 
-        if (remaining >= durationMinutes) {
-            call.setMinutesFromQuota(durationMinutes);
+        if (remaining >= durationFractions) {
+            call.setMinutesFromQuota(durationFractions);
             call.setCost(BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY));
         } else if (remaining > 0) {
-            int billableSeconds = billSeconds - (remaining * 60);
+            int billableSeconds = billSeconds - (remaining * 30);
             call.setMinutesFromQuota(remaining);
             call.setCost(calculateFractionCost(billableSeconds, resolveRate(plan, call.getCallType())));
         } else {
@@ -86,7 +86,7 @@ public class CallCostingService {
 
     private static int resolveQuota(Plan plan, CallType callType, Circuit circuit, CallRepository repo) {
         return switch (plan.getPackageType()) {
-            case UNIFIED      -> plan.getPackageTotalMinutes() != null ? plan.getPackageTotalMinutes() : 0;
+            case UNIFIED      -> plan.getPackageTotalMinutes() != null ? plan.getPackageTotalMinutes() * 2 : 0;
             case PER_CATEGORY -> resolvePerCategoryQuota(plan, callType);
             case NONE         -> 0;
         };
@@ -103,10 +103,10 @@ public class CallCostingService {
 
     private static int resolvePerCategoryQuota(Plan plan, CallType callType) {
         return switch (callType) {
-            case FIXED_LOCAL         -> plan.getPackageFixedLocal()         != null ? plan.getPackageFixedLocal()         : 0;
-            case FIXED_LONG_DISTANCE -> plan.getPackageFixedLongDistance()  != null ? plan.getPackageFixedLongDistance()  : 0;
-            case MOBILE_LOCAL        -> plan.getPackageMobileLocal()        != null ? plan.getPackageMobileLocal()        : 0;
-            case MOBILE_LONG_DISTANCE-> plan.getPackageMobileLongDistance() != null ? plan.getPackageMobileLongDistance() : 0;
+            case FIXED_LOCAL         -> plan.getPackageFixedLocal()         != null ? plan.getPackageFixedLocal()         * 2 : 0;
+            case FIXED_LONG_DISTANCE -> plan.getPackageFixedLongDistance()  != null ? plan.getPackageFixedLongDistance()  * 2 : 0;
+            case MOBILE_LOCAL        -> plan.getPackageMobileLocal()        != null ? plan.getPackageMobileLocal()        * 2 : 0;
+            case MOBILE_LONG_DISTANCE-> plan.getPackageMobileLongDistance() != null ? plan.getPackageMobileLongDistance() * 2 : 0;
             default                  -> 0;
         };
     }

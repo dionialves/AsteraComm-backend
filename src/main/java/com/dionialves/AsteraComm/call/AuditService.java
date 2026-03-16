@@ -50,10 +50,10 @@ public class AuditService {
         BigDecimal totalCost  = BigDecimal.ZERO;
 
         for (Call call : calls) {
-            int billSeconds     = call.getBillSeconds();
-            CallType callType   = call.getCallType();
-            BigDecimal rate     = resolveRate(plan, callType);
-            int durationMinutes = (int) Math.ceil(billSeconds / 60.0);
+            int billSeconds       = call.getBillSeconds();
+            CallType callType     = call.getCallType();
+            BigDecimal rate       = resolveRate(plan, callType);
+            int durationFractions = (int) Math.ceil(billSeconds / 30.0);
 
             BigDecimal cost;
             int quotaUsedThisCall;
@@ -62,13 +62,13 @@ public class AuditService {
                 cost              = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
                 quotaUsedThisCall = 0;
             } else if (plan.getPackageType() == PackageType.UNIFIED) {
-                quotaUsedThisCall = applyQuota(unifiedRemaining, durationMinutes);
-                cost              = decodeCost(billSeconds, rate, durationMinutes, unifiedRemaining);
+                quotaUsedThisCall = applyQuota(unifiedRemaining, durationFractions);
+                cost              = decodeCost(billSeconds, rate, durationFractions, unifiedRemaining);
                 unifiedRemaining -= quotaUsedThisCall;
             } else if (plan.getPackageType() == PackageType.PER_CATEGORY) {
                 int categoryRemaining = perCategoryRemaining.getOrDefault(callType, 0);
-                quotaUsedThisCall = applyQuota(categoryRemaining, durationMinutes);
-                cost              = decodeCost(billSeconds, rate, durationMinutes, categoryRemaining);
+                quotaUsedThisCall = applyQuota(categoryRemaining, durationFractions);
+                cost              = decodeCost(billSeconds, rate, durationFractions, categoryRemaining);
                 perCategoryRemaining.merge(callType, -quotaUsedThisCall, Integer::sum);
             } else {
                 // PackageType.NONE
@@ -77,7 +77,7 @@ public class AuditService {
             }
 
             quotaAccumulated += quotaUsedThisCall;
-            if (billSeconds > 3) totalMinutes += durationMinutes;
+            if (billSeconds > 3) totalMinutes += durationFractions;
             quotaMinutesUsed += quotaUsedThisCall;
             totalCost         = totalCost.add(cost);
 
@@ -108,26 +108,26 @@ public class AuditService {
     }
 
     private static BigDecimal decodeCost(int billSeconds, BigDecimal rate,
-                                         int durationMinutes, int remaining) {
-        if (remaining >= durationMinutes) {
+                                         int durationFractions, int remaining) {
+        if (remaining >= durationFractions) {
             return BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
         } else if (remaining > 0) {
-            int billableSeconds = billSeconds - (remaining * 60);
+            int billableSeconds = billSeconds - (remaining * 30);
             return CallCostingService.calculateFractionCost(billableSeconds, rate);
         } else {
             return CallCostingService.calculateFractionCost(billSeconds, rate);
         }
     }
 
-    private static int applyQuota(int remaining, int durationMinutes) {
-        if (remaining >= durationMinutes) return durationMinutes;
-        if (remaining > 0)              return remaining;
+    private static int applyQuota(int remaining, int durationFractions) {
+        if (remaining >= durationFractions) return durationFractions;
+        if (remaining > 0)                 return remaining;
         return 0;
     }
 
     private int resolveUnifiedQuota(Plan plan) {
         if (plan.getPackageType() != PackageType.UNIFIED) return 0;
-        return plan.getPackageTotalMinutes() != null ? plan.getPackageTotalMinutes() : 0;
+        return plan.getPackageTotalMinutes() != null ? plan.getPackageTotalMinutes() * 2 : 0;
     }
 
     private Map<CallType, Integer> resolvePerCategoryQuota(Plan plan) {
@@ -141,7 +141,7 @@ public class AuditService {
     }
 
     private void putIfNotNull(Map<CallType, Integer> map, CallType type, Integer value) {
-        if (value != null && value > 0) map.put(type, value);
+        if (value != null && value > 0) map.put(type, value * 2);
     }
 
     private static BigDecimal resolveRate(Plan plan, CallType callType) {

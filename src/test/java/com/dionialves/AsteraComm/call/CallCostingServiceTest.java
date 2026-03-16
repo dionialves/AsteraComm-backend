@@ -154,34 +154,34 @@ class CallCostingServiceTest {
     void applyCosting_setsZeroCost_whenCallFullyWithinUnifiedQuota() {
         plan.setPackageType(PackageType.UNIFIED);
         plan.setPackageTotalMinutes(100);
-        // 30 used, 70 remaining; call = 1 min → fully covered
+        // quota = 100*2 = 200 frações; 60 usadas (30 min * 2); remaining = 140; call = 60s = 2 frações → coberta
         Call call = buildCall(60, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(30);
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(60);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
         assertThat(call.getCallStatus()).isEqualTo(CallStatus.PROCESSED);
         assertThat(call.getCost()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(call.getMinutesFromQuota()).isEqualTo(1);
+        assertThat(call.getMinutesFromQuota()).isEqualTo(2);
     }
 
     @Test
     void applyCosting_chargesPartialCost_whenCallPartiallyExceedsUnifiedQuota() {
         plan.setPackageType(PackageType.UNIFIED);
         plan.setPackageTotalMinutes(100);
-        // 98 used, 2 remaining; call = 180s (3 min)
-        // 2 min covered, 60s billable → ceil(60/30)=2 fractions → 2*(0.09/2)=0.09
+        // quota = 200 frações; 196 usadas (98 min * 2); remaining = 4; call = 180s = 6 frações
+        // billableSeconds = 180 - (4*30) = 60s → ceil(60/30)=2 frações → 2*(0.09/2)=0.09
         Call call = buildCall(180, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(98);
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(196);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
         assertThat(call.getCallStatus()).isEqualTo(CallStatus.PROCESSED);
-        assertThat(call.getMinutesFromQuota()).isEqualTo(2);
+        assertThat(call.getMinutesFromQuota()).isEqualTo(4);
         assertThat(call.getCost()).isEqualByComparingTo(new BigDecimal("0.09"));
     }
 
@@ -189,11 +189,11 @@ class CallCostingServiceTest {
     void applyCosting_chargesFullCost_whenUnifiedQuotaFullyExhausted() {
         plan.setPackageType(PackageType.UNIFIED);
         plan.setPackageTotalMinutes(100);
-        // 100 used, 0 remaining; call = 60s → ceil(60/30)=2 fractions → 0.09
+        // quota = 200 frações; 200 usadas (esgotado); remaining = 0; call = 60s → ceil(60/30)=2 frações → 0.09
         Call call = buildCall(60, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(100);
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(200);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
@@ -229,21 +229,39 @@ class CallCostingServiceTest {
     @Test
     void applyCosting_usesPerTypeQuota_whenPlanIsPerCategory() {
         plan.setPackageType(PackageType.PER_CATEGORY);
-        plan.setPackageFixedLocal(50);   // 50 min for FIXED_LOCAL
+        plan.setPackageFixedLocal(50);   // 50 min → 100 frações para FIXED_LOCAL
         plan.setPackageMobileLocal(20);  // 20 min for MOBILE_LOCAL (not used)
-        // 40 used for FIXED_LOCAL, 10 remaining; call = 60s (1 min) → fully covered
+        // 80 frações usadas (40 min * 2); remaining = 20; call = 60s = 2 frações → coberta
         Call call = buildCall(60, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
         when(callRepository.sumQuotaMinutesByType(CIRCUIT_NUMBER, CallType.FIXED_LOCAL.name(), 3, 2026))
-                .thenReturn(40);
+                .thenReturn(80);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
         assertThat(call.getCallStatus()).isEqualTo(CallStatus.PROCESSED);
         assertThat(call.getCost()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(call.getMinutesFromQuota()).isEqualTo(1);
+        assertThat(call.getMinutesFromQuota()).isEqualTo(2);
         verify(callRepository, never()).sumQuotaMinutes(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    void applyCosting_consumes3Fractions_for61SecondCallWithinQuota() {
+        plan.setPackageType(PackageType.UNIFIED);
+        plan.setPackageTotalMinutes(100);
+        // US-020 critério 1: ligação de 61s consome 3 frações do pacote (ceil(61/30)=3)
+        // quota = 200 frações; 0 usadas; remaining = 200; coberta por completo
+        Call call = buildCall(61, CallType.FIXED_LOCAL);
+        when(endpointRepository.findById(CIRCUIT_NUMBER))
+                .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(0);
+
+        callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
+
+        assertThat(call.getCallStatus()).isEqualTo(CallStatus.PROCESSED);
+        assertThat(call.getCost()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(call.getMinutesFromQuota()).isEqualTo(3);
     }
 
     // -------------------------------------------------------------------------
