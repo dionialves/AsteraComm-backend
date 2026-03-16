@@ -20,6 +20,7 @@ public class CallProcessingService {
     private final CallTypeClassifier callTypeClassifier;
     private final CircuitRepository circuitRepository;
     private final ChannelParser channelParser;
+    private final CallCostingService callCostingService;
 
     @Scheduled(fixedRateString = "${call.processing.interval.ms}")
     public void process() {
@@ -39,6 +40,8 @@ public class CallProcessingService {
             if (!circuitCode.isEmpty()) {
                 circuitRepository.findById(circuitCode).ifPresent(call::setCircuit);
             }
+            callRepository.save(call);
+            callCostingService.applyCosting(call, cdr.getDcontext());
             callRepository.save(call);
         }
     }

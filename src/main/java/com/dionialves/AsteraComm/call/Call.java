@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -52,4 +53,14 @@ public class Call {
     @JoinColumn(name = "circuit_number")
     @JsonIgnoreProperties({"customer", "password", "hibernateLazyInitializer", "handler"})
     private Circuit circuit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "call_status")
+    private CallStatus callStatus;
+
+    @Column(name = "minutes_from_quota")
+    private Integer minutesFromQuota;
+
+    @Column(name = "cost", precision = 10, scale = 2)
+    private BigDecimal cost;
 }

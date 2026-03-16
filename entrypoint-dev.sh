@@ -12,10 +12,10 @@ touch /tmp/last_compile
 
 while true; do
     sleep 2
-    CHANGED=$(find /app/src/main -name "*.java" -newer /tmp/last_compile 2>/dev/null | wc -l)
+    CHANGED=$(find /app/src/main \( -name "*.java" -o -name "*.sql" -o -name "*.properties" \) -newer /tmp/last_compile 2>/dev/null | wc -l)
     if [ "$CHANGED" -gt 0 ]; then
         echo "[DEV] Alteracao detectada. Recompilando..."
         touch /tmp/last_compile
-        mvn compile -q 2>&1 || echo "[DEV] Erro na compilacao — verifique o codigo"
+        mvn process-resources compile -q 2>&1 || echo "[DEV] Erro na compilacao — verifique o codigo"
     fi
 done

@@ -39,6 +39,9 @@ class CallProcessingServiceTest {
     @Mock
     private ChannelParser channelParser;
 
+    @Mock
+    private CallCostingService callCostingService;
+
     @InjectMocks
     private CallProcessingService callProcessingService;
 
@@ -68,8 +71,8 @@ class CallProcessingServiceTest {
         callProcessingService.process();
 
         ArgumentCaptor<Call> captor = ArgumentCaptor.forClass(Call.class);
-        verify(callRepository).save(captor.capture());
-        Call saved = captor.getValue();
+        verify(callRepository, times(2)).save(captor.capture());
+        Call saved = captor.getAllValues().get(0);
         assertThat(saved.getUniqueId()).isEqualTo("1000.1");
         assertThat(saved.getCallerNumber()).isEqualTo("11933334444");
         assertThat(saved.getDst()).isEqualTo("1133334444");
@@ -94,8 +97,8 @@ class CallProcessingServiceTest {
         callProcessingService.process();
 
         ArgumentCaptor<Call> captor = ArgumentCaptor.forClass(Call.class);
-        verify(callRepository).save(captor.capture());
-        assertThat(captor.getValue().getCircuit()).isEqualTo(circuit);
+        verify(callRepository, times(2)).save(captor.capture());
+        assertThat(captor.getAllValues().get(0).getCircuit()).isEqualTo(circuit);
     }
 
     @Test
@@ -110,8 +113,8 @@ class CallProcessingServiceTest {
         callProcessingService.process();
 
         ArgumentCaptor<Call> captor = ArgumentCaptor.forClass(Call.class);
-        verify(callRepository).save(captor.capture());
-        assertThat(captor.getValue().getCircuit()).isNull();
+        verify(callRepository, times(2)).save(captor.capture());
+        assertThat(captor.getAllValues().get(0).getCircuit()).isNull();
     }
 
     @Test
@@ -125,8 +128,8 @@ class CallProcessingServiceTest {
         callProcessingService.process();
 
         ArgumentCaptor<Call> captor = ArgumentCaptor.forClass(Call.class);
-        verify(callRepository).save(captor.capture());
-        assertThat(captor.getValue().getCircuit()).isNull();
+        verify(callRepository, times(2)).save(captor.capture());
+        assertThat(captor.getAllValues().get(0).getCircuit()).isNull();
         verify(circuitRepository, never()).findById(any());
     }
 
@@ -143,7 +146,7 @@ class CallProcessingServiceTest {
 
         callProcessingService.process();
 
-        verify(callRepository, times(3)).save(any(Call.class));
+        verify(callRepository, times(6)).save(any(Call.class));
     }
 
     @Test
