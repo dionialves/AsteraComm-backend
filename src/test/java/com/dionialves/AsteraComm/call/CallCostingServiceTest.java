@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -157,7 +158,7 @@ class CallCostingServiceTest {
         Call call = buildCall(60, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutesThisMonth(CIRCUIT_NUMBER)).thenReturn(30);
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(30);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
@@ -175,7 +176,7 @@ class CallCostingServiceTest {
         Call call = buildCall(180, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutesThisMonth(CIRCUIT_NUMBER)).thenReturn(98);
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(98);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
@@ -192,7 +193,7 @@ class CallCostingServiceTest {
         Call call = buildCall(60, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutesThisMonth(CIRCUIT_NUMBER)).thenReturn(100);
+        when(callRepository.sumQuotaMinutes(CIRCUIT_NUMBER, 3, 2026)).thenReturn(100);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
 
@@ -234,7 +235,7 @@ class CallCostingServiceTest {
         Call call = buildCall(60, CallType.FIXED_LOCAL);
         when(endpointRepository.findById(CIRCUIT_NUMBER))
                 .thenReturn(Optional.of(buildEndpoint(OUTBOUND_CONTEXT)));
-        when(callRepository.sumQuotaMinutesThisMonthByType(CIRCUIT_NUMBER, CallType.FIXED_LOCAL.name()))
+        when(callRepository.sumQuotaMinutesByType(CIRCUIT_NUMBER, CallType.FIXED_LOCAL.name(), 3, 2026))
                 .thenReturn(40);
 
         callCostingService.applyCosting(call, OUTBOUND_CONTEXT);
@@ -242,7 +243,7 @@ class CallCostingServiceTest {
         assertThat(call.getCallStatus()).isEqualTo(CallStatus.PROCESSED);
         assertThat(call.getCost()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(call.getMinutesFromQuota()).isEqualTo(1);
-        verify(callRepository, never()).sumQuotaMinutesThisMonth(any());
+        verify(callRepository, never()).sumQuotaMinutes(any(), anyInt(), anyInt());
     }
 
     // -------------------------------------------------------------------------

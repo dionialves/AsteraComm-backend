@@ -49,10 +49,13 @@ public class CallCostingService {
             return;
         }
 
+        int callMonth = call.getCallDate().getMonthValue();
+        int callYear  = call.getCallDate().getYear();
+
         int quota = resolveQuota(plan, call.getCallType(), circuit, callRepository);
 
         if (quota > 0) {
-            applyWithQuota(call, plan, quota, billSeconds);
+            applyWithQuota(call, plan, quota, billSeconds, callMonth, callYear);
         } else {
             call.setMinutesFromQuota(0);
             call.setCost(calculateFractionCost(billSeconds, resolveRate(plan, call.getCallType())));
@@ -61,8 +64,10 @@ public class CallCostingService {
         call.setCallStatus(CallStatus.PROCESSED);
     }
 
-    private void applyWithQuota(Call call, Plan plan, int quota, int billSeconds) {
-        int used = fetchUsedMinutes(plan, call.getCallType(), call.getCircuit(), callRepository);
+    private void applyWithQuota(Call call, Plan plan, int quota, int billSeconds,
+                                int callMonth, int callYear) {
+        int used = fetchUsedMinutes(plan, call.getCallType(), call.getCircuit(), callRepository,
+                callMonth, callYear);
         int remaining = quota - used;
         int durationMinutes = (int) Math.ceil(billSeconds / 60.0);
 
@@ -87,10 +92,11 @@ public class CallCostingService {
         };
     }
 
-    private static int fetchUsedMinutes(Plan plan, CallType callType, Circuit circuit, CallRepository repo) {
+    private static int fetchUsedMinutes(Plan plan, CallType callType, Circuit circuit,
+                                        CallRepository repo, int month, int year) {
         return switch (plan.getPackageType()) {
-            case UNIFIED      -> repo.sumQuotaMinutesThisMonth(circuit.getNumber());
-            case PER_CATEGORY -> repo.sumQuotaMinutesThisMonthByType(circuit.getNumber(), callType.name());
+            case UNIFIED      -> repo.sumQuotaMinutes(circuit.getNumber(), month, year);
+            case PER_CATEGORY -> repo.sumQuotaMinutesByType(circuit.getNumber(), callType.name(), month, year);
             case NONE         -> 0;
         };
     }

@@ -34,7 +34,9 @@ public class SecurityConfigurations {
 
                         .requestMatchers(
                                 "/api/users",
-                                "/api/users/**")
+                                "/api/users/**",
+                                "/api/audit",
+                                "/api/audit/**")
                         .hasRole("SUPER_ADMIN")
 
                         .anyRequest().authenticated())
