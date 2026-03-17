@@ -59,7 +59,7 @@ class DIDServiceTest {
         Page<DID> page = new PageImpl<>(List.of(testDID));
         when(didRepository.findAll(any(Pageable.class))).thenReturn(page);
 
-        Page<DID> result = didService.getAll(PageRequest.of(0, 10));
+        Page<DID> result = didService.getAll("", PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(didRepository).findAll(PageRequest.of(0, 10));
@@ -138,7 +138,7 @@ class DIDServiceTest {
     @Test
     void linkToCircuit_shouldSetCircuitNumberAndProvisionDid_whenDIDFreeAndCircuitExists() {
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.save(any(DID.class))).thenReturn(testDID);
 
         didService.linkToCircuit(1L, "100000");
@@ -162,7 +162,7 @@ class DIDServiceTest {
     @Test
     void linkToCircuit_shouldThrowNotFoundException_whenCircuitNotExists() {
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
-        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber("999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> didService.linkToCircuit(1L, "999999"))
                 .isInstanceOf(NotFoundException.class)
@@ -188,7 +188,7 @@ class DIDServiceTest {
     void unlinkFromCircuit_shouldClearCircuitNumberAndDeprovisionDid_whenLinked() {
         testDID.setCircuitNumber("100000");
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.save(any(DID.class))).thenReturn(testDID);
 
         didService.unlinkFromCircuit(1L);

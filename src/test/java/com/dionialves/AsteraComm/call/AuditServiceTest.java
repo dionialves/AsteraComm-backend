@@ -78,7 +78,7 @@ class AuditServiceTest {
 
     @Test
     void simulate_throwsNotFoundException_whenCircuitNotFound() {
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> auditService.simulate(CIRCUIT_NUMBER, MONTH, YEAR))
                 .isInstanceOf(NotFoundException.class)
@@ -88,7 +88,7 @@ class AuditServiceTest {
     @Test
     void simulate_throwsNotFoundException_whenCircuitHasNoPlan() {
         circuit.setPlan(null);
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
 
         assertThatThrownBy(() -> auditService.simulate(CIRCUIT_NUMBER, MONTH, YEAR))
                 .isInstanceOf(NotFoundException.class);
@@ -104,7 +104,7 @@ class AuditServiceTest {
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0), 60, CallType.FIXED_LOCAL);
         Call c2 = buildCall("uid2", LocalDateTime.of(2026, 3, 2, 10, 0, 0), 60, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1, c2));
 
@@ -129,7 +129,7 @@ class AuditServiceTest {
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0), 60, CallType.FIXED_LOCAL);
         Call c2 = buildCall("uid2", LocalDateTime.of(2026, 3, 2, 10, 0, 0), 60, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1, c2));
 
@@ -157,7 +157,7 @@ class AuditServiceTest {
         Call c2 = buildCall("uid2", LocalDateTime.of(2026, 3, 2, 10, 0, 0), 60, CallType.FIXED_LOCAL);
         Call c3 = buildCall("uid3", LocalDateTime.of(2026, 3, 3, 11, 0, 0), 60, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1, c2, c3));
 
@@ -198,7 +198,7 @@ class AuditServiceTest {
         // billableSeconds = 180 - (4*30) = 60s → ceil(60/30)=2 frações → 2*(0.09/2) = 0.09
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0), 180, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1));
 
@@ -221,7 +221,7 @@ class AuditServiceTest {
 
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0), 61, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1));
 
@@ -246,7 +246,7 @@ class AuditServiceTest {
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0),  60, CallType.FIXED_LOCAL);
         Call c2 = buildCall("uid2", LocalDateTime.of(2026, 3, 1, 10, 0, 0), 60, CallType.MOBILE_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1, c2));
 
@@ -266,7 +266,7 @@ class AuditServiceTest {
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0),  60, CallType.FIXED_LOCAL);
         Call c2 = buildCall("uid2", LocalDateTime.of(2026, 3, 2, 10, 0, 0), 60, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1, c2));
 
@@ -287,7 +287,7 @@ class AuditServiceTest {
 
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0), 3, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1));
 
@@ -312,7 +312,7 @@ class AuditServiceTest {
         Call c1 = buildCall("uid1", LocalDateTime.of(2026, 3, 1, 9, 0, 0),  60, CallType.FIXED_LOCAL);
         Call c2 = buildCall("uid2", LocalDateTime.of(2026, 3, 2, 10, 0, 0), 60, CallType.FIXED_LOCAL);
 
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of(c1, c2));
 
@@ -331,7 +331,7 @@ class AuditServiceTest {
 
     @Test
     void simulate_returnsCorrectMetadata() {
-        when(circuitRepository.findById(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber(CIRCUIT_NUMBER)).thenReturn(Optional.of(circuit));
         when(callRepository.findByCircuitNumberAndPeriod(CIRCUIT_NUMBER, MONTH, YEAR))
                 .thenReturn(List.of());
 

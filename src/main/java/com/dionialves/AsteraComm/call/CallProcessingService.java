@@ -38,7 +38,7 @@ public class CallProcessingService {
             call.setProcessedAt(LocalDateTime.now());
             String circuitCode = channelParser.parse(cdr.getChannel());
             if (!circuitCode.isEmpty()) {
-                circuitRepository.findById(circuitCode).ifPresent(call::setCircuit);
+                circuitRepository.findByNumber(circuitCode).ifPresent(call::setCircuit);
             }
             callRepository.save(call);
             callCostingService.applyCosting(call, cdr.getDcontext());

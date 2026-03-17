@@ -104,7 +104,7 @@ class PlanControllerTest {
     @Test
     void getAll_shouldReturn200_paginated() throws Exception {
         var page = new PageImpl<>(List.of(testPlan), PageRequest.of(0, 10), 1);
-        when(planService.getAll(any())).thenReturn(page);
+        when(planService.getAll(any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/plans"))
                 .andExpect(status().isOk())

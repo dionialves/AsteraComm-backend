@@ -19,8 +19,11 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CircuitRepository circuitRepository;
 
-    public Page<Customer> getAll(Pageable pageable) {
-        return customerRepository.findAll(pageable);
+    public Page<Customer> getAll(String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return customerRepository.findAll(pageable);
+        }
+        return customerRepository.findByNameContainingIgnoreCase(search, pageable);
     }
 
     public Optional<Customer> findById(Long id) {

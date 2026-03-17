@@ -17,8 +17,10 @@ public class DIDController {
     private final DIDService didService;
 
     @GetMapping
-    public Page<DID> findAll(@PageableDefault(size = 10) Pageable pageable) {
-        return didService.getAll(pageable);
+    public Page<DID> findAll(
+            @RequestParam(defaultValue = "") String search,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return didService.getAll(search, pageable);
     }
 
     @GetMapping("/{id}")

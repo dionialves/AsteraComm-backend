@@ -54,7 +54,7 @@ class DIDControllerTest {
     @Test
     void getAll_shouldReturn200_paginated() throws Exception {
         var page = new PageImpl<>(List.of(testDID), PageRequest.of(0, 10), 1);
-        when(didService.getAll(any())).thenReturn(page);
+        when(didService.getAll(any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/dids"))
                 .andExpect(status().isOk())

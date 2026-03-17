@@ -23,7 +23,7 @@ public class AuditService {
     private final CallRepository    callRepository;
 
     public AuditResultDTO simulate(String circuitNumber, int month, int year) {
-        Circuit circuit = circuitRepository.findById(circuitNumber)
+        Circuit circuit = circuitRepository.findByNumber(circuitNumber)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado: " + circuitNumber));
 
         Plan plan = circuit.getPlan();

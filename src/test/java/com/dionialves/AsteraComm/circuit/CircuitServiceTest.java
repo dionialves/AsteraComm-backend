@@ -62,6 +62,7 @@ class CircuitServiceTest {
         testPlan.setName("Plano Basic");
 
         testCircuit = new Circuit();
+        testCircuit.setId(1L);
         testCircuit.setNumber("100000");
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("opasuite");
@@ -81,7 +82,7 @@ class CircuitServiceTest {
 
     @Test
     void findByNumber_shouldReturnCircuit_whenExists() {
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
 
         Optional<Circuit> result = circuitService.findByNumber("100000");
 
@@ -91,7 +92,7 @@ class CircuitServiceTest {
 
     @Test
     void findByNumber_shouldReturnEmpty_whenNotExists() {
-        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber("999999")).thenReturn(Optional.empty());
 
         Optional<Circuit> result = circuitService.findByNumber("999999");
 
@@ -145,7 +146,7 @@ class CircuitServiceTest {
     @Test
     void update_shouldUpdatePasswordAndCallReprovision() {
         CircuitCreateDTO dto = new CircuitCreateDTO("newpassword", "opasuite", 1L, 10L);
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
         when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
@@ -159,7 +160,7 @@ class CircuitServiceTest {
     @Test
     void update_shouldThrowNotFoundException_whenCircuitNotExists() {
         CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite", 1L, 10L);
-        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber("999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> circuitService.update("999999", dto))
                 .isInstanceOf(NotFoundException.class)
@@ -169,7 +170,7 @@ class CircuitServiceTest {
     @Test
     void update_shouldThrowNotFoundException_whenCustomerNotExists() {
         CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite", 99L, 10L);
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> circuitService.update("100000", dto))
@@ -222,7 +223,7 @@ class CircuitServiceTest {
     @Test
     void update_shouldChangePlan_whenNewPlanIdProvided() {
         CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, 10L);
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
         when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
@@ -236,7 +237,7 @@ class CircuitServiceTest {
     void update_shouldThrowBusinessException_whenPlanIdIsNull() {
         testCircuit.setPlan(testPlan);
         CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, null);
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
 
         assertThatThrownBy(() -> circuitService.update("100000", dto))
@@ -248,7 +249,7 @@ class CircuitServiceTest {
 
     @Test
     void delete_shouldCallDeprovisionAndDeleteCircuit() {
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.existsByCircuitNumber("100000")).thenReturn(false);
 
         circuitService.delete("100000");
@@ -259,7 +260,7 @@ class CircuitServiceTest {
 
     @Test
     void delete_shouldThrowBusinessException_whenCircuitHasLinkedDids() {
-        when(circuitRepository.findById("100000")).thenReturn(Optional.of(testCircuit));
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.existsByCircuitNumber("100000")).thenReturn(true);
 
         assertThatThrownBy(() -> circuitService.delete("100000"))
@@ -271,7 +272,7 @@ class CircuitServiceTest {
 
     @Test
     void delete_shouldThrowNotFoundException_whenNotExists() {
-        when(circuitRepository.findById("999999")).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber("999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> circuitService.delete("999999"))
                 .isInstanceOf(NotFoundException.class)

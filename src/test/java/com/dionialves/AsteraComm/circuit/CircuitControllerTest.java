@@ -45,6 +45,7 @@ class CircuitControllerTest {
         customer.setName("Acme Corp");
 
         testCircuit = new Circuit();
+        testCircuit.setId(1L);
         testCircuit.setNumber("100000");
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("opasuite");

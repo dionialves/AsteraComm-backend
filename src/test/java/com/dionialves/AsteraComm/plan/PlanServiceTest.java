@@ -91,7 +91,7 @@ class PlanServiceTest {
         Page<Plan> page = new PageImpl<>(List.of(testPlan));
         when(planRepository.findAll(any(Pageable.class))).thenReturn(page);
 
-        Page<Plan> result = planService.getAll(PageRequest.of(0, 10));
+        Page<Plan> result = planService.getAll("", PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(planRepository).findAll(PageRequest.of(0, 10));

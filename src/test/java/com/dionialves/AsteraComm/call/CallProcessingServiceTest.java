@@ -66,7 +66,7 @@ class CallProcessingServiceTest {
         when(callerIdParser.parse("\"Cliente\" <11933334444>")).thenReturn("11933334444");
         when(callTypeClassifier.classify("1133334444")).thenReturn(CallType.FIXED_LONG_DISTANCE);
         when(channelParser.parse("PJSIP/4933401714-000045f0")).thenReturn("4933401714");
-        when(circuitRepository.findById("4933401714")).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber("4933401714")).thenReturn(Optional.empty());
 
         callProcessingService.process();
 
@@ -92,7 +92,7 @@ class CallProcessingServiceTest {
         when(callerIdParser.parse(any())).thenReturn("11933334444");
         when(callTypeClassifier.classify(any())).thenReturn(CallType.FIXED_LOCAL);
         when(channelParser.parse("PJSIP/4933401714-000045f0")).thenReturn("4933401714");
-        when(circuitRepository.findById("4933401714")).thenReturn(Optional.of(circuit));
+        when(circuitRepository.findByNumber("4933401714")).thenReturn(Optional.of(circuit));
 
         callProcessingService.process();
 
@@ -108,7 +108,7 @@ class CallProcessingServiceTest {
         when(callerIdParser.parse(any())).thenReturn("11933334444");
         when(callTypeClassifier.classify(any())).thenReturn(CallType.FIXED_LOCAL);
         when(channelParser.parse("PJSIP/9999999999-000045f0")).thenReturn("9999999999");
-        when(circuitRepository.findById("9999999999")).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber("9999999999")).thenReturn(Optional.empty());
 
         callProcessingService.process();
 
@@ -142,7 +142,7 @@ class CallProcessingServiceTest {
         when(callerIdParser.parse(any())).thenReturn("11933334444");
         when(callTypeClassifier.classify(any())).thenReturn(CallType.FIXED_LONG_DISTANCE);
         when(channelParser.parse(any())).thenReturn("4933401714");
-        when(circuitRepository.findById(any())).thenReturn(Optional.empty());
+        when(circuitRepository.findByNumber(any())).thenReturn(Optional.empty());
 
         callProcessingService.process();
 

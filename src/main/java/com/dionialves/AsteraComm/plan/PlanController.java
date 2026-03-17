@@ -19,8 +19,10 @@ public class PlanController {
     private final PlanService planService;
 
     @GetMapping
-    public Page<Plan> findAll(@PageableDefault(size = 10) Pageable pageable) {
-        return planService.getAll(pageable);
+    public Page<Plan> findAll(
+            @RequestParam(defaultValue = "") String search,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return planService.getAll(search, pageable);
     }
 
     @GetMapping("/{id}")

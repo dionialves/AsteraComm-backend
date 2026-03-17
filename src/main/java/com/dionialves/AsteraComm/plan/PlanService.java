@@ -18,8 +18,11 @@ public class PlanService {
 
     private final PlanRepository planRepository;
 
-    public Page<Plan> getAll(Pageable pageable) {
-        return planRepository.findAll(pageable);
+    public Page<Plan> getAll(String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return planRepository.findAll(pageable);
+        }
+        return planRepository.findByNameContainingIgnoreCase(search, pageable);
     }
 
     public Optional<Plan> findById(Long id) {

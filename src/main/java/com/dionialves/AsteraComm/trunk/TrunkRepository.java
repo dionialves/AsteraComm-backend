@@ -9,6 +9,18 @@ import org.springframework.data.repository.query.Param;
 public interface TrunkRepository extends JpaRepository<Trunk, String> {
 
     @Query(value = """
+            SELECT COUNT(DISTINCT t.name)
+            FROM asteracomm_trunks t
+            JOIN (
+                SELECT DISTINCT ON (trunk_name) trunk_name, registered
+                FROM asteracomm_trunk_registration_status
+                ORDER BY trunk_name, id DESC
+            ) s ON s.trunk_name = t.name
+            WHERE s.registered = true
+            """, nativeQuery = true)
+    long countRegistered();
+
+    @Query(value = """
             WITH last_status AS (
                 SELECT DISTINCT ON (trunk_name) *
                 FROM asteracomm_trunk_registration_status

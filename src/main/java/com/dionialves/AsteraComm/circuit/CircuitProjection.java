@@ -1,7 +1,8 @@
 package com.dionialves.AsteraComm.circuit;
 
 public interface CircuitProjection {
-    String getId();
+    Long getId();
+    String getNumber();
     String getPassword();
     String getTrunkName();
     String getCustomerName();

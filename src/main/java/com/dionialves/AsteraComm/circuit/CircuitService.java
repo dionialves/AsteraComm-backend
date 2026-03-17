@@ -32,7 +32,7 @@ public class CircuitService {
     }
 
     public Optional<Circuit> findByNumber(String number) {
-        return circuitRepository.findById(number);
+        return circuitRepository.findByNumber(number);
     }
 
     @Transactional
@@ -59,7 +59,7 @@ public class CircuitService {
 
     @Transactional
     public Circuit update(String number, CircuitCreateDTO dto) {
-        Circuit circuit = circuitRepository.findById(number)
+        Circuit circuit = circuitRepository.findByNumber(number)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
         Customer customer = customerRepository.findById(dto.customerId())
@@ -80,7 +80,7 @@ public class CircuitService {
 
     @Transactional
     public void delete(String number) {
-        Circuit circuit = circuitRepository.findById(number)
+        Circuit circuit = circuitRepository.findByNumber(number)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
         if (didRepository.existsByCircuitNumber(number)) {

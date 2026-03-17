@@ -17,6 +17,9 @@ import lombok.Setter;
 public class Circuit {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @Column(nullable = false, unique = true)
     private String number;
 

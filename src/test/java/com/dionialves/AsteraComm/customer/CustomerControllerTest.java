@@ -58,7 +58,7 @@ class CustomerControllerTest {
     @Test
     void getAll_shouldReturn200_withPage() throws Exception {
         var page = new PageImpl<>(List.of(testCustomer), PageRequest.of(0, 10), 1);
-        when(customerService.getAll(any())).thenReturn(page);
+        when(customerService.getAll(any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/customers"))
                 .andExpect(status().isOk())

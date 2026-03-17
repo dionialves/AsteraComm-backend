@@ -17,8 +17,10 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping
-    public Page<Customer> findAll(@PageableDefault(size = 10, sort = "name") Pageable pageable) {
-        return customerService.getAll(pageable);
+    public Page<Customer> findAll(
+            @RequestParam(defaultValue = "") String search,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
+        return customerService.getAll(search, pageable);
     }
 
     @GetMapping("/{id}")

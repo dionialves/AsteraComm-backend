@@ -50,7 +50,7 @@ public class Call {
     private LocalDateTime processedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "circuit_number")
+    @JoinColumn(name = "circuit_number", referencedColumnName = "number")
     @JsonIgnoreProperties({"customer", "password", "hibernateLazyInitializer", "handler"})
     private Circuit circuit;
 

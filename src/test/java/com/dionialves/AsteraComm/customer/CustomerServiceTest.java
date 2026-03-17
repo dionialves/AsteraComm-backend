@@ -57,7 +57,7 @@ class CustomerServiceTest {
         Page<Customer> page = new PageImpl<>(List.of(testCustomer), pageable, 1);
         when(customerRepository.findAll(pageable)).thenReturn(page);
 
-        Page<Customer> result = customerService.getAll(pageable);
+        Page<Customer> result = customerService.getAll("", pageable);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo("Acme Corp");

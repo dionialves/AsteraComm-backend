@@ -22,8 +22,11 @@ public class DIDService {
     private final CircuitRepository circuitRepository;
     private final AsteriskProvisioningService asteriskProvisioningService;
 
-    public Page<DID> getAll(Pageable pageable) {
-        return didRepository.findAll(pageable);
+    public Page<DID> getAll(String search, Pageable pageable) {
+        if (search == null || search.isBlank()) {
+            return didRepository.findAll(pageable);
+        }
+        return didRepository.findByNumberContaining(search, pageable);
     }
 
     public Optional<DID> findById(Long id) {
@@ -60,7 +63,7 @@ public class DIDService {
             throw new BusinessException("DID já está vinculado a um circuito");
         }
 
-        Circuit circuit = circuitRepository.findById(circuitNumber)
+        Circuit circuit = circuitRepository.findByNumber(circuitNumber)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
         did.setCircuitNumber(circuitNumber);
@@ -78,7 +81,7 @@ public class DIDService {
             throw new BusinessException("DID não está vinculado a nenhum circuito");
         }
 
-        Circuit circuit = circuitRepository.findById(did.getCircuitNumber())
+        Circuit circuit = circuitRepository.findByNumber(did.getCircuitNumber())
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
         did.setCircuitNumber(null);
