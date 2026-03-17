@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
+import com.dionialves.AsteraComm.call.CallRepository;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
 import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.customer.CustomerRepository;
@@ -23,6 +24,7 @@ public class CircuitService {
 
     private final CircuitRepository circuitRepository;
     private final DIDRepository didRepository;
+    private final CallRepository callRepository;
     private final CustomerRepository customerRepository;
     private final PlanRepository planRepository;
     private final AsteriskProvisioningService asteriskProvisioningService;
@@ -50,6 +52,7 @@ public class CircuitService {
         circuit.setTrunkName(dto.trunkName());
         circuit.setCustomer(customer);
         circuit.setPlan(resolvePlan(dto.planId()));
+        circuit.setActive(dto.active() != null ? dto.active() : true);
         Circuit saved = circuitRepository.save(circuit);
 
         asteriskProvisioningService.provision(saved);
@@ -71,6 +74,7 @@ public class CircuitService {
         circuit.setTrunkName(dto.trunkName());
         circuit.setCustomer(customer);
         circuit.setPlan(resolvePlan(dto.planId()));
+        if (dto.active() != null) circuit.setActive(dto.active());
         Circuit saved = circuitRepository.save(circuit);
 
         asteriskProvisioningService.reprovision(saved, previousTrunkName);
@@ -79,16 +83,22 @@ public class CircuitService {
     }
 
     @Transactional
-    public void delete(String number) {
+    public Optional<Circuit> delete(String number) {
         Circuit circuit = circuitRepository.findByNumber(number)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
         if (didRepository.existsByCircuitNumber(number)) {
-            throw new BusinessException("Circuito possui DID(s) vinculado(s). Desvincule os DIDs antes de excluir.");
+            throw new BusinessException("Desvincule os DIDs antes de excluir o circuito");
+        }
+
+        if (callRepository.existsByCircuitNumber(number)) {
+            circuit.setActive(false);
+            return Optional.of(circuitRepository.save(circuit));
         }
 
         asteriskProvisioningService.deprovision(circuit);
         circuitRepository.delete(circuit);
+        return Optional.empty();
     }
 
     private Plan resolvePlan(Long planId) {

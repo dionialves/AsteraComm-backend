@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
+import com.dionialves.AsteraComm.call.CallRepository;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
 import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.customer.CustomerRepository;
@@ -35,6 +36,9 @@ class CircuitServiceTest {
     private DIDRepository didRepository;
 
     @Mock
+    private CallRepository callRepository;
+
+    @Mock
     private CustomerRepository customerRepository;
 
     @Mock
@@ -67,6 +71,7 @@ class CircuitServiceTest {
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("opasuite");
         testCircuit.setCustomer(testCustomer);
+        testCircuit.setActive(true);
     }
 
     @Test
@@ -101,7 +106,7 @@ class CircuitServiceTest {
 
     @Test
     void create_shouldGenerateCodeStartingAt100000_whenNoCircuitsExist() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L, null);
         when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
@@ -119,7 +124,7 @@ class CircuitServiceTest {
 
     @Test
     void create_shouldIncrementCode_whenCircuitsExist() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L, null);
         when(circuitRepository.findMaxCode()).thenReturn(Optional.of("100004"));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
@@ -132,7 +137,7 @@ class CircuitServiceTest {
 
     @Test
     void create_shouldThrowNotFoundException_whenCustomerNotExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 99L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 99L, 10L, null);
         when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
         when(customerRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -144,8 +149,34 @@ class CircuitServiceTest {
     }
 
     @Test
+    void create_shouldSetActiveTrueByDefault_whenActiveIsNull() {
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L, null);
+        when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
+        when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
+
+        circuitService.create(dto);
+
+        verify(circuitRepository).save(argThat(Circuit::isActive));
+    }
+
+    @Test
+    void create_shouldSetActiveTrue_whenActiveTrueInDTO() {
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L, true);
+        when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
+        when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
+
+        circuitService.create(dto);
+
+        verify(circuitRepository).save(argThat(Circuit::isActive));
+    }
+
+    @Test
     void update_shouldUpdatePasswordAndCallReprovision() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("newpassword", "opasuite", 1L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("newpassword", "opasuite", 1L, 10L, null);
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
@@ -159,7 +190,7 @@ class CircuitServiceTest {
 
     @Test
     void update_shouldThrowNotFoundException_whenCircuitNotExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite", 1L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite", 1L, 10L, null);
         when(circuitRepository.findByNumber("999999")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> circuitService.update("999999", dto))
@@ -169,7 +200,7 @@ class CircuitServiceTest {
 
     @Test
     void update_shouldThrowNotFoundException_whenCustomerNotExists() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite", 99L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("password", "opasuite", 99L, 10L, null);
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -178,11 +209,38 @@ class CircuitServiceTest {
                 .hasMessageContaining("Cliente não encontrado");
     }
 
+    @Test
+    void update_shouldPersistActiveFalse_whenDtoHasActiveFalse() {
+        CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, 10L, false);
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
+        when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
+
+        circuitService.update("100000", dto);
+
+        verify(circuitRepository).save(argThat(c -> !c.isActive()));
+    }
+
+    @Test
+    void update_shouldKeepActiveTrueWhenDtoHasActiveNull() {
+        testCircuit.setActive(true);
+        CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, 10L, null);
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
+        when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
+        when(circuitRepository.save(any(Circuit.class))).thenReturn(testCircuit);
+
+        circuitService.update("100000", dto);
+
+        verify(circuitRepository).save(argThat(Circuit::isActive));
+    }
+
     // === Novos testes US-018 — vínculo com plano ===
 
     @Test
     void create_shouldSetPlan_whenPlanIdProvided() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 10L, null);
         when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
@@ -195,7 +253,7 @@ class CircuitServiceTest {
 
     @Test
     void create_shouldThrowBusinessException_whenPlanIdIsNull() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, null);
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, null, null);
         when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
 
@@ -208,7 +266,7 @@ class CircuitServiceTest {
 
     @Test
     void create_shouldThrowNotFoundException_whenPlanNotFound() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 99L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("mypassword", "opasuite", 1L, 99L, null);
         when(circuitRepository.findMaxCode()).thenReturn(Optional.empty());
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(99L)).thenReturn(Optional.empty());
@@ -222,7 +280,7 @@ class CircuitServiceTest {
 
     @Test
     void update_shouldChangePlan_whenNewPlanIdProvided() {
-        CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, 10L);
+        CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, 10L, null);
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
         when(planRepository.findById(10L)).thenReturn(Optional.of(testPlan));
@@ -236,7 +294,7 @@ class CircuitServiceTest {
     @Test
     void update_shouldThrowBusinessException_whenPlanIdIsNull() {
         testCircuit.setPlan(testPlan);
-        CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, null);
+        CircuitCreateDTO dto = new CircuitCreateDTO("secret", "opasuite", 1L, null, null);
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(testCustomer));
 
@@ -247,13 +305,17 @@ class CircuitServiceTest {
         verify(circuitRepository, never()).save(any());
     }
 
+    // === delete ===
+
     @Test
-    void delete_shouldCallDeprovisionAndDeleteCircuit() {
+    void delete_shouldCallDeprovisionAndDeleteCircuit_whenNoLinks() {
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.existsByCircuitNumber("100000")).thenReturn(false);
+        when(callRepository.existsByCircuitNumber("100000")).thenReturn(false);
 
-        circuitService.delete("100000");
+        Optional<Circuit> result = circuitService.delete("100000");
 
+        assertThat(result).isEmpty();
         verify(asteriskProvisioningService).deprovision(testCircuit);
         verify(circuitRepository).delete(testCircuit);
     }
@@ -268,6 +330,23 @@ class CircuitServiceTest {
                 .hasMessageContaining("DID");
 
         verifyNoInteractions(asteriskProvisioningService);
+        verify(circuitRepository, never()).delete(any());
+    }
+
+    @Test
+    void delete_whenCallsExist_shouldDeactivateAndReturnCircuit() {
+        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
+        when(didRepository.existsByCircuitNumber("100000")).thenReturn(false);
+        when(callRepository.existsByCircuitNumber("100000")).thenReturn(true);
+        when(circuitRepository.save(testCircuit)).thenReturn(testCircuit);
+
+        Optional<Circuit> result = circuitService.delete("100000");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().isActive()).isFalse();
+        verify(circuitRepository).save(argThat(c -> !c.isActive()));
+        verifyNoInteractions(asteriskProvisioningService);
+        verify(circuitRepository, never()).delete(any());
     }
 
     @Test

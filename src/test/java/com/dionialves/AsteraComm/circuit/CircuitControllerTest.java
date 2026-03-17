@@ -2,6 +2,7 @@ package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
 import com.dionialves.AsteraComm.customer.Customer;
+import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,7 @@ class CircuitControllerTest {
         testCircuit.setPassword("secret");
         testCircuit.setTrunkName("opasuite");
         testCircuit.setCustomer(customer);
+        testCircuit.setActive(true);
 
         mockMvc = MockMvcBuilders.standaloneSetup(circuitController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -116,6 +118,18 @@ class CircuitControllerTest {
     }
 
     @Test
+    void update_shouldReturn200_withActiveField() throws Exception {
+        testCircuit.setActive(false);
+        when(circuitService.update(eq("100000"), any(CircuitCreateDTO.class))).thenReturn(testCircuit);
+
+        mockMvc.perform(put("/api/circuits/100000")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\",\"customerId\":1,\"active\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+    }
+
+    @Test
     void update_shouldReturn404_whenNotExists() throws Exception {
         when(circuitService.update(eq("999999"), any(CircuitCreateDTO.class)))
                 .thenThrow(new NotFoundException("Circuito não encontrado"));
@@ -127,17 +141,37 @@ class CircuitControllerTest {
     }
 
     @Test
-    void delete_shouldReturn204() throws Exception {
-        doNothing().when(circuitService).delete("100000");
+    void delete_shouldReturn204_whenNoLinksExist() throws Exception {
+        when(circuitService.delete("100000")).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/circuits/100000"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
+    void delete_shouldReturn200WithDeactivatedCircuit_whenCallsExist() throws Exception {
+        testCircuit.setActive(false);
+        when(circuitService.delete("100000")).thenReturn(Optional.of(testCircuit));
+
+        mockMvc.perform(delete("/api/circuits/100000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false))
+                .andExpect(jsonPath("$.number").value("100000"));
+    }
+
+    @Test
+    void delete_shouldReturn400_whenDidsExist() throws Exception {
+        when(circuitService.delete("100000"))
+                .thenThrow(new BusinessException("Desvincule os DIDs antes de excluir o circuito"));
+
+        mockMvc.perform(delete("/api/circuits/100000"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void delete_shouldReturn404_whenNotExists() throws Exception {
-        doThrow(new NotFoundException("Circuito não encontrado"))
-                .when(circuitService).delete("999999");
+        when(circuitService.delete("999999"))
+                .thenThrow(new NotFoundException("Circuito não encontrado"));
 
         mockMvc.perform(delete("/api/circuits/999999"))
                 .andExpect(status().isNotFound());

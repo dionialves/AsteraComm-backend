@@ -10,4 +10,5 @@ public interface CircuitProjection {
     String getIp();
     String getRtt();
     boolean isOnline();
+    boolean isActive();
 }

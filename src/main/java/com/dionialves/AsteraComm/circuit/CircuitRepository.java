@@ -51,7 +51,8 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
                 p.name          AS planName,
                 s.ip            AS ip,
                 s.rtt           AS rtt,
-                CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online
+                CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online,
+                c.active        AS active
             FROM asteracomm_circuits c
             JOIN asteracomm_customers cu ON cu.id = c.customer_id
             LEFT JOIN asteracomm_plans p ON p.id = c.plan_id

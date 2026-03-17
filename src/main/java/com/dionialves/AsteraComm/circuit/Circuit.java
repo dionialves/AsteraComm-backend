@@ -36,4 +36,7 @@ public class Circuit {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "plan_id", nullable = false)
     private Plan plan;
+
+    @Column(nullable = false)
+    private boolean active = true;
 }

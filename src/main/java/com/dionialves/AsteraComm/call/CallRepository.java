@@ -16,6 +16,8 @@ public interface CallRepository extends JpaRepository<Call, Long>,
 
     Optional<Call> findByUniqueId(String uniqueId);
 
+    boolean existsByCircuitNumber(String circuitNumber);
+
     @Query(value = "SELECT COUNT(*) FROM asteracomm_calls " +
             "WHERE call_status = 'PROCESSED' " +
             "AND EXTRACT(MONTH FROM call_date) = :month " +

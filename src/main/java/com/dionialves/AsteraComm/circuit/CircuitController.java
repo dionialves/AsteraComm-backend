@@ -43,8 +43,9 @@ public class CircuitController {
     }
 
     @DeleteMapping("/{number}")
-    public ResponseEntity<Void> delete(@PathVariable String number) {
-        circuitService.delete(number);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> delete(@PathVariable String number) {
+        return circuitService.delete(number)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
     }
 }
