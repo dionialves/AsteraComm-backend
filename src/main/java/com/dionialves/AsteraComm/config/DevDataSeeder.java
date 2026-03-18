@@ -109,7 +109,7 @@ public class DevDataSeeder implements CommandLineRunner {
             circuitRepository.save(circuit);
 
             String didNumber = String.valueOf(DID_INICIAL + (long) i * DID_INCREMENTO);
-            criarDid(didNumber, number);
+            criarDid(didNumber, circuit);
 
             Auth auth = criarAuth(number, password);
             authRepository.save(auth);
@@ -212,11 +212,11 @@ public class DevDataSeeder implements CommandLineRunner {
                 });
     }
 
-    private void criarDid(String number, String circuitNumber) {
+    private void criarDid(String number, Circuit circuit) {
         if (didRepository.existsByNumber(number)) return;
         DID did = new DID();
         did.setNumber(number);
-        did.setCircuitNumber(circuitNumber);
+        did.setCircuit(circuit);
         didRepository.save(did);
     }
 

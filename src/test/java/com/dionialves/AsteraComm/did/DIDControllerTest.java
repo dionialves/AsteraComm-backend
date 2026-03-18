@@ -1,5 +1,6 @@
 package com.dionialves.AsteraComm.did;
 
+import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
@@ -43,7 +44,7 @@ class DIDControllerTest {
         testDID = new DID();
         testDID.setId(1L);
         testDID.setNumber("4933001234");
-        testDID.setCircuitNumber(null);
+        testDID.setCircuit(null);
 
         mockMvc = MockMvcBuilders.standaloneSetup(didController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -76,6 +77,16 @@ class DIDControllerTest {
 
         mockMvc.perform(get("/api/dids/99"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getFree_shouldReturn200_withList() throws Exception {
+        when(didService.getFree()).thenReturn(List.of(testDID));
+
+        mockMvc.perform(get("/api/dids/free"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].number").value("4933001234"));
     }
 
     @Test
@@ -113,11 +124,15 @@ class DIDControllerTest {
 
     @Test
     void linkToCircuit_shouldReturn200() throws Exception {
-        testDID.setCircuitNumber("100000");
+        Circuit circuit = new Circuit();
+        circuit.setId(1L);
+        circuit.setNumber("100000");
+        testDID.setCircuit(circuit);
         when(didService.linkToCircuit(1L, "100000")).thenReturn(testDID);
 
         mockMvc.perform(put("/api/dids/1/link/100000"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.circuitId").value(1))
                 .andExpect(jsonPath("$.circuitNumber").value("100000"));
     }
 

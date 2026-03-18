@@ -70,7 +70,7 @@ class AsteriskProvisioningServiceTest {
         testDID = new DID();
         testDID.setId(1L);
         testDID.setNumber("4933001234");
-        testDID.setCircuitNumber("100000");
+        testDID.setCircuit(testCircuit);
 
         testTrunk = new Trunk();
         testTrunk.setName("provedor1");

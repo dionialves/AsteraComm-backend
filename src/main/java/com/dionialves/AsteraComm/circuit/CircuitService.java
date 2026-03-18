@@ -87,7 +87,7 @@ public class CircuitService {
         Circuit circuit = circuitRepository.findByNumber(number)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
-        if (didRepository.existsByCircuitNumber(number)) {
+        if (didRepository.existsByCircuit(circuit)) {
             throw new BusinessException("Desvincule os DIDs antes de excluir o circuito");
         }
 

@@ -30,6 +30,11 @@ public class DIDController {
         return didService.getFree();
     }
 
+    @GetMapping("/by-circuit/{circuitNumber}")
+    public List<DID> findByCircuit(@PathVariable String circuitNumber) {
+        return didService.getByCircuit(circuitNumber);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<DID> findById(@PathVariable Long id) {
         return didService.findById(id)

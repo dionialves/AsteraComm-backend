@@ -310,7 +310,7 @@ class CircuitServiceTest {
     @Test
     void delete_shouldCallDeprovisionAndDeleteCircuit_whenNoLinks() {
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
-        when(didRepository.existsByCircuitNumber("100000")).thenReturn(false);
+        when(didRepository.existsByCircuit(testCircuit)).thenReturn(false);
         when(callRepository.existsByCircuitNumber("100000")).thenReturn(false);
 
         Optional<Circuit> result = circuitService.delete("100000");
@@ -323,7 +323,7 @@ class CircuitServiceTest {
     @Test
     void delete_shouldThrowBusinessException_whenCircuitHasLinkedDids() {
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
-        when(didRepository.existsByCircuitNumber("100000")).thenReturn(true);
+        when(didRepository.existsByCircuit(testCircuit)).thenReturn(true);
 
         assertThatThrownBy(() -> circuitService.delete("100000"))
                 .isInstanceOf(BusinessException.class)
@@ -336,7 +336,7 @@ class CircuitServiceTest {
     @Test
     void delete_whenCallsExist_shouldDeactivateAndReturnCircuit() {
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
-        when(didRepository.existsByCircuitNumber("100000")).thenReturn(false);
+        when(didRepository.existsByCircuit(testCircuit)).thenReturn(false);
         when(callRepository.existsByCircuitNumber("100000")).thenReturn(true);
         when(circuitRepository.save(testCircuit)).thenReturn(testCircuit);
 

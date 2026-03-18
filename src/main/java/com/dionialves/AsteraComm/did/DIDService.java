@@ -35,7 +35,11 @@ public class DIDService {
     }
 
     public List<DID> getFree() {
-        return didRepository.findByCircuitNumberIsNull();
+        return didRepository.findByCircuitIsNull();
+    }
+
+    public List<DID> getByCircuit(String circuitNumber) {
+        return didRepository.findByCircuit_Number(circuitNumber);
     }
 
     @Transactional
@@ -64,14 +68,14 @@ public class DIDService {
         DID did = didRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("DID não encontrado"));
 
-        if (did.getCircuitNumber() != null) {
+        if (did.getCircuit() != null) {
             throw new BusinessException("DID já está vinculado a um circuito");
         }
 
         Circuit circuit = circuitRepository.findByNumber(circuitNumber)
                 .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
 
-        did.setCircuitNumber(circuitNumber);
+        did.setCircuit(circuit);
         DID saved = didRepository.save(did);
         asteriskProvisioningService.provisionDid(saved, circuit);
         return saved;
@@ -82,14 +86,12 @@ public class DIDService {
         DID did = didRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("DID não encontrado"));
 
-        if (did.getCircuitNumber() == null) {
+        if (did.getCircuit() == null) {
             throw new BusinessException("DID não está vinculado a nenhum circuito");
         }
 
-        Circuit circuit = circuitRepository.findByNumber(did.getCircuitNumber())
-                .orElseThrow(() -> new NotFoundException("Circuito não encontrado"));
-
-        did.setCircuitNumber(null);
+        Circuit circuit = did.getCircuit();
+        did.setCircuit(null);
         DID saved = didRepository.save(did);
         asteriskProvisioningService.deprovisionDid(did.getNumber(), circuit.getTrunkName());
         return saved;
@@ -100,7 +102,7 @@ public class DIDService {
         DID did = didRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("DID não encontrado"));
 
-        if (did.getCircuitNumber() != null) {
+        if (did.getCircuit() != null) {
             throw new BusinessException("DID não pode ser removido pois está vinculado a um circuito");
         }
 

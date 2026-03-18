@@ -45,9 +45,10 @@ class DIDServiceTest {
         testDID = new DID();
         testDID.setId(1L);
         testDID.setNumber("4933001234");
-        testDID.setCircuitNumber(null);
+        testDID.setCircuit(null);
 
         testCircuit = new Circuit();
+        testCircuit.setId(1L);
         testCircuit.setNumber("100000");
         testCircuit.setTrunkName("provedor1");
     }
@@ -84,6 +85,19 @@ class DIDServiceTest {
         Optional<DID> result = didService.findById(99L);
 
         assertThat(result).isEmpty();
+    }
+
+    // --- getFree ---
+
+    @Test
+    void getFree_shouldReturnOnlyUnlinkedDIDs() {
+        when(didRepository.findByCircuitIsNull()).thenReturn(List.of(testDID));
+
+        List<DID> result = didService.getFree();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getCircuit()).isNull();
+        verify(didRepository).findByCircuitIsNull();
     }
 
     // --- create ---
@@ -136,20 +150,20 @@ class DIDServiceTest {
     // --- linkToCircuit ---
 
     @Test
-    void linkToCircuit_shouldSetCircuitNumberAndProvisionDid_whenDIDFreeAndCircuitExists() {
+    void linkToCircuit_shouldSetCircuitAndProvisionDid_whenDIDFreeAndCircuitExists() {
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
         when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.save(any(DID.class))).thenReturn(testDID);
 
         didService.linkToCircuit(1L, "100000");
 
-        verify(didRepository).save(argThat(d -> "100000".equals(d.getCircuitNumber())));
+        verify(didRepository).save(argThat(d -> testCircuit.equals(d.getCircuit())));
         verify(asteriskProvisioningService).provisionDid(any(DID.class), eq(testCircuit));
     }
 
     @Test
     void linkToCircuit_shouldThrowBusinessException_whenAlreadyLinked() {
-        testDID.setCircuitNumber("100000");
+        testDID.setCircuit(testCircuit);
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
 
         assertThatThrownBy(() -> didService.linkToCircuit(1L, "100001"))
@@ -185,15 +199,14 @@ class DIDServiceTest {
     // --- unlinkFromCircuit ---
 
     @Test
-    void unlinkFromCircuit_shouldClearCircuitNumberAndDeprovisionDid_whenLinked() {
-        testDID.setCircuitNumber("100000");
+    void unlinkFromCircuit_shouldClearCircuitAndDeprovisionDid_whenLinked() {
+        testDID.setCircuit(testCircuit);
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
-        when(circuitRepository.findByNumber("100000")).thenReturn(Optional.of(testCircuit));
         when(didRepository.save(any(DID.class))).thenReturn(testDID);
 
         didService.unlinkFromCircuit(1L);
 
-        verify(didRepository).save(argThat(d -> d.getCircuitNumber() == null));
+        verify(didRepository).save(argThat(d -> d.getCircuit() == null));
         verify(asteriskProvisioningService).deprovisionDid("4933001234", "provedor1");
     }
 
@@ -232,7 +245,7 @@ class DIDServiceTest {
 
     @Test
     void delete_shouldThrowBusinessException_whenLinkedToCircuit() {
-        testDID.setCircuitNumber("100000");
+        testDID.setCircuit(testCircuit);
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
 
         assertThatThrownBy(() -> didService.delete(1L))
