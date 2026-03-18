@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/dids")
@@ -21,6 +23,11 @@ public class DIDController {
             @RequestParam(defaultValue = "") String search,
             @PageableDefault(size = 10) Pageable pageable) {
         return didService.getAll(search, pageable);
+    }
+
+    @GetMapping("/free")
+    public List<DID> findFree() {
+        return didService.getFree();
     }
 
     @GetMapping("/{id}")

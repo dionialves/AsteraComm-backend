@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -31,6 +32,10 @@ public class DIDService {
 
     public Optional<DID> findById(Long id) {
         return didRepository.findById(id);
+    }
+
+    public List<DID> getFree() {
+        return didRepository.findByCircuitNumberIsNull();
     }
 
     @Transactional
