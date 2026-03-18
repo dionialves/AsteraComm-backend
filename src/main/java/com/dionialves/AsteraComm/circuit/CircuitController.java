@@ -4,6 +4,7 @@ import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class CircuitController {
     @GetMapping
     public Page<CircuitProjection> findAll(
             @RequestParam(required = false, defaultValue = "") String search,
-            @PageableDefault(size = 10, sort = "number") Pageable pageable) {
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         return circuitService.getAll(search, pageable);
     }
 
