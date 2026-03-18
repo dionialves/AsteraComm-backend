@@ -1,5 +1,7 @@
 package com.dionialves.AsteraComm.customer;
 
+import com.dionialves.AsteraComm.circuit.CircuitProjection;
+import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,12 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final CircuitRepository circuitRepository;
 
     @GetMapping
     public Page<Customer> findAll(
@@ -52,5 +57,10 @@ public class CustomerController {
     public ResponseEntity<Customer> disable(@PathVariable Long id) {
         Customer customer = customerService.disable(id);
         return ResponseEntity.ok(customer);
+    }
+
+    @GetMapping("/{id}/circuits")
+    public ResponseEntity<List<CircuitProjection>> findCircuits(@PathVariable Long id) {
+        return ResponseEntity.ok(circuitRepository.findByCustomerIdProjected(id));
     }
 }

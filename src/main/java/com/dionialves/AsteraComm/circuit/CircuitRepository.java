@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface CircuitRepository extends JpaRepository<Circuit, Long> {
@@ -17,6 +18,33 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
     Optional<String> findMaxCode();
 
     boolean existsByCustomerId(Long customerId);
+
+    @Query(value = """
+            WITH last_status AS (
+                SELECT DISTINCT ON (endpoint) *
+                FROM asteracomm_endpoint_status
+                WHERE online = true
+                ORDER BY endpoint, id DESC
+            )
+            SELECT
+                c.id            AS id,
+                c.number        AS number,
+                c.password      AS password,
+                c.trunk_name    AS trunkName,
+                cu.name         AS customerName,
+                p.name          AS planName,
+                s.ip            AS ip,
+                s.rtt           AS rtt,
+                CASE WHEN s.id IS NOT NULL THEN true ELSE false END AS online,
+                c.active        AS active
+            FROM asteracomm_circuits c
+            JOIN asteracomm_customers cu ON cu.id = c.customer_id
+            LEFT JOIN asteracomm_plans p ON p.id = c.plan_id
+            LEFT JOIN last_status s ON s.endpoint = c.number
+            WHERE c.customer_id = :customerId
+            ORDER BY c.id DESC
+            """, nativeQuery = true)
+    List<CircuitProjection> findByCustomerIdProjected(@Param("customerId") Long customerId);
 
     @Query(value = """
             SELECT COUNT(DISTINCT c.number)
@@ -31,8 +59,7 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
     long countOnline();
 
     @Query(value = "SELECT COALESCE(SUM(p.monthly_price), 0) " +
-            "FROM asteracomm_circuits c JOIN asteracomm_plans p ON p.id = c.plan_id",
-            nativeQuery = true)
+            "FROM asteracomm_circuits c JOIN asteracomm_plans p ON p.id = c.plan_id", nativeQuery = true)
     BigDecimal sumMonthlyPrices();
 
     @Query(value = """
