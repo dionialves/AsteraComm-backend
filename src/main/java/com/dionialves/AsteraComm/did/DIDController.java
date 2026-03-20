@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.did;
 
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
+import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +20,11 @@ public class DIDController {
     private final DIDService didService;
 
     @GetMapping
-    public Page<DID> findAll(
+    public Page<DIDResponseDTO> findAll(
             @RequestParam(defaultValue = "") String search,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return didService.getAll(search, pageable);
+            @RequestParam(required = false) String status,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return didService.getAll(search, status, pageable);
     }
 
     @GetMapping("/free")

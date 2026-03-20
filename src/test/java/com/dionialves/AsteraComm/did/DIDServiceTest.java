@@ -4,6 +4,7 @@ import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningServi
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
+import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,13 +58,91 @@ class DIDServiceTest {
 
     @Test
     void getAll_shouldDelegateToRepository() {
-        Page<DID> page = new PageImpl<>(List.of(testDID));
-        when(didRepository.findAll(any(Pageable.class))).thenReturn(page);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findAll(pageable)).thenReturn(page);
 
-        Page<DID> result = didService.getAll("", PageRequest.of(0, 10));
+        Page<DIDResponseDTO> result = didService.getAll("", null, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
-        verify(didRepository).findAll(PageRequest.of(0, 10));
+        verify(didRepository).findAll(pageable);
+    }
+
+    @Test
+    void getAll_shouldReturnResponseDTOWithStatusFree_whenNoCircuit() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findAll(pageable)).thenReturn(page);
+
+        Page<DIDResponseDTO> result = didService.getAll("", null, pageable);
+
+        assertThat(result.getContent().get(0).status()).isEqualTo("FREE");
+        assertThat(result.getContent().get(0).circuit()).isNull();
+    }
+
+    @Test
+    void getAll_shouldReturnResponseDTOWithStatusInUse_whenCircuitLinked() {
+        testDID.setCircuit(testCircuit);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findAll(pageable)).thenReturn(page);
+
+        Page<DIDResponseDTO> result = didService.getAll("", null, pageable);
+
+        assertThat(result.getContent().get(0).status()).isEqualTo("IN_USE");
+        assertThat(result.getContent().get(0).circuit()).isNotNull();
+        assertThat(result.getContent().get(0).circuit().code()).isEqualTo("100000");
+    }
+
+    @Test
+    void getAll_withInUseFilter_shouldQueryByCircuitIsNotNull() {
+        Pageable pageable = PageRequest.of(0, 20);
+        testDID.setCircuit(testCircuit);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findByCircuitIsNotNull(pageable)).thenReturn(page);
+
+        Page<DIDResponseDTO> result = didService.getAll("", "IN_USE", pageable);
+
+        assertThat(result.getContent().get(0).status()).isEqualTo("IN_USE");
+        verify(didRepository).findByCircuitIsNotNull(pageable);
+        verify(didRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void getAll_withFreeFilter_shouldQueryByCircuitIsNull() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findByCircuitIsNull(pageable)).thenReturn(page);
+
+        Page<DIDResponseDTO> result = didService.getAll("", "FREE", pageable);
+
+        assertThat(result.getContent().get(0).status()).isEqualTo("FREE");
+        verify(didRepository).findByCircuitIsNull(pageable);
+    }
+
+    @Test
+    void getAll_withInUseFilterAndSearch_shouldApplyBothFilters() {
+        Pageable pageable = PageRequest.of(0, 20);
+        testDID.setCircuit(testCircuit);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findByCircuitIsNotNullAndNumberContaining("4933", pageable)).thenReturn(page);
+
+        Page<DIDResponseDTO> result = didService.getAll("4933", "IN_USE", pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(didRepository).findByCircuitIsNotNullAndNumberContaining("4933", pageable);
+    }
+
+    @Test
+    void getAll_withFreeFilterAndSearch_shouldApplyBothFilters() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<DID> page = new PageImpl<>(List.of(testDID), pageable, 1);
+        when(didRepository.findByCircuitIsNullAndNumberContaining("4933", pageable)).thenReturn(page);
+
+        Page<DIDResponseDTO> result = didService.getAll("4933", "FREE", pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(didRepository).findByCircuitIsNullAndNumberContaining("4933", pageable);
     }
 
     // --- findById ---

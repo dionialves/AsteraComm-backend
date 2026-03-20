@@ -17,6 +17,14 @@ public interface DIDRepository extends JpaRepository<DID, Long> {
 
     List<DID> findByCircuitIsNull();
 
+    Page<DID> findByCircuitIsNull(Pageable pageable);
+
+    Page<DID> findByCircuitIsNotNull(Pageable pageable);
+
+    Page<DID> findByCircuitIsNullAndNumberContaining(String number, Pageable pageable);
+
+    Page<DID> findByCircuitIsNotNullAndNumberContaining(String number, Pageable pageable);
+
     List<DID> findByCircuit_Number(String circuitNumber);
 
 }

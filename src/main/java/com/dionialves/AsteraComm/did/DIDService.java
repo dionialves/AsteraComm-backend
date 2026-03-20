@@ -3,7 +3,9 @@ package com.dionialves.AsteraComm.did;
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
+import com.dionialves.AsteraComm.did.dto.DIDCircuitDTO;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
+import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,31 @@ public class DIDService {
     private final CircuitRepository circuitRepository;
     private final AsteriskProvisioningService asteriskProvisioningService;
 
-    public Page<DID> getAll(String search, Pageable pageable) {
-        if (search == null || search.isBlank()) {
-            return didRepository.findAll(pageable);
+    public Page<DIDResponseDTO> getAll(String search, String status, Pageable pageable) {
+        boolean hasSearch = search != null && !search.isBlank();
+        Page<DID> page;
+        if ("IN_USE".equals(status) && hasSearch) {
+            page = didRepository.findByCircuitIsNotNullAndNumberContaining(search, pageable);
+        } else if ("IN_USE".equals(status)) {
+            page = didRepository.findByCircuitIsNotNull(pageable);
+        } else if ("FREE".equals(status) && hasSearch) {
+            page = didRepository.findByCircuitIsNullAndNumberContaining(search, pageable);
+        } else if ("FREE".equals(status)) {
+            page = didRepository.findByCircuitIsNull(pageable);
+        } else if (hasSearch) {
+            page = didRepository.findByNumberContaining(search, pageable);
+        } else {
+            page = didRepository.findAll(pageable);
         }
-        return didRepository.findByNumberContaining(search, pageable);
+        return page.map(this::toResponseDTO);
+    }
+
+    private DIDResponseDTO toResponseDTO(DID did) {
+        String status = did.getCircuit() != null ? "IN_USE" : "FREE";
+        DIDCircuitDTO circuit = did.getCircuit() != null
+                ? new DIDCircuitDTO(did.getCircuit().getId(), did.getCircuit().getNumber())
+                : null;
+        return new DIDResponseDTO(did.getId(), did.getNumber(), status, circuit);
     }
 
     public Optional<DID> findById(Long id) {

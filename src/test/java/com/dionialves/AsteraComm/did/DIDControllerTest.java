@@ -1,7 +1,9 @@
 package com.dionialves.AsteraComm.did;
 
 import com.dionialves.AsteraComm.circuit.Circuit;
+import com.dionialves.AsteraComm.did.dto.DIDCircuitDTO;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
+import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
@@ -38,6 +40,8 @@ class DIDControllerTest {
     private DIDController didController;
 
     private DID testDID;
+    private DIDResponseDTO testDIDFreeDTO;
+    private DIDResponseDTO testDIDInUseDTO;
 
     @BeforeEach
     void setUp() {
@@ -45,6 +49,9 @@ class DIDControllerTest {
         testDID.setId(1L);
         testDID.setNumber("4933001234");
         testDID.setCircuit(null);
+
+        testDIDFreeDTO  = new DIDResponseDTO(1L, "4933001234", "FREE",  null);
+        testDIDInUseDTO = new DIDResponseDTO(1L, "4933001234", "IN_USE", new DIDCircuitDTO(1L, "100000"));
 
         mockMvc = MockMvcBuilders.standaloneSetup(didController)
                 .setControllerAdvice(new GlobalExceptionHandler())
@@ -54,12 +61,56 @@ class DIDControllerTest {
 
     @Test
     void getAll_shouldReturn200_paginated() throws Exception {
-        var page = new PageImpl<>(List.of(testDID), PageRequest.of(0, 10), 1);
-        when(didService.getAll(any(), any())).thenReturn(page);
+        var page = new PageImpl<>(List.of(testDIDFreeDTO), PageRequest.of(0, 20), 1);
+        when(didService.getAll(any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/dids"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
+    }
+
+    @Test
+    void getAll_withInUseStatus_shouldPassFilterToService() throws Exception {
+        var page = new PageImpl<>(List.of(testDIDInUseDTO), PageRequest.of(0, 20), 1);
+        when(didService.getAll(any(), eq("IN_USE"), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/dids").param("status", "IN_USE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("IN_USE"));
+
+        verify(didService).getAll(any(), eq("IN_USE"), any());
+    }
+
+    @Test
+    void getAll_withFreeStatus_shouldPassFilterToService() throws Exception {
+        var page = new PageImpl<>(List.of(testDIDFreeDTO), PageRequest.of(0, 20), 1);
+        when(didService.getAll(any(), eq("FREE"), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/dids").param("status", "FREE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].status").value("FREE"));
+
+        verify(didService).getAll(any(), eq("FREE"), any());
+    }
+
+    @Test
+    void getAll_shouldReturnCircuitInResponseWhenInUse() throws Exception {
+        var page = new PageImpl<>(List.of(testDIDInUseDTO), PageRequest.of(0, 20), 1);
+        when(didService.getAll(any(), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/dids"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].circuit.code").value("100000"));
+    }
+
+    @Test
+    void getAll_shouldReturnNullCircuitWhenFree() throws Exception {
+        var page = new PageImpl<>(List.of(testDIDFreeDTO), PageRequest.of(0, 20), 1);
+        when(didService.getAll(any(), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/dids"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].circuit").doesNotExist());
     }
 
     @Test
