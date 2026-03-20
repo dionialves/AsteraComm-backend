@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.circuit;
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.call.CallRepository;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
+import com.dionialves.AsteraComm.circuit.dto.CircuitSummaryDTO;
 import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.customer.CustomerRepository;
 import com.dionialves.AsteraComm.did.DIDRepository;
@@ -77,12 +78,12 @@ class CircuitServiceTest {
     @Test
     void getAll_shouldDelegateToRepository() {
         Page<CircuitProjection> page = new PageImpl<>(List.of());
-        when(circuitRepository.findAllCircuits(anyString(), any(Pageable.class))).thenReturn(page);
+        when(circuitRepository.findAllCircuits(anyString(), isNull(), isNull(), any(Pageable.class))).thenReturn(page);
 
-        Page<CircuitProjection> result = circuitService.getAll("", PageRequest.of(0, 10));
+        Page<CircuitProjection> result = circuitService.getAll("", null, null, PageRequest.of(0, 10));
 
         assertThat(result).isNotNull();
-        verify(circuitRepository).findAllCircuits("", PageRequest.of(0, 10));
+        verify(circuitRepository).findAllCircuits("", null, null, PageRequest.of(0, 10));
     }
 
     @Test
@@ -347,6 +348,53 @@ class CircuitServiceTest {
         verify(circuitRepository).save(argThat(c -> !c.isActive()));
         verifyNoInteractions(asteriskProvisioningService);
         verify(circuitRepository, never()).delete(any());
+    }
+
+    // === Novos testes US-041 — summary e filtros de listagem ===
+
+    @Test
+    void getSummary_shouldReturnCorrectCounts() {
+        when(circuitRepository.countAll()).thenReturn(10L);
+        when(circuitRepository.countActive()).thenReturn(7L);
+        when(circuitRepository.countOnline()).thenReturn(5L);
+        when(circuitRepository.countInactive()).thenReturn(3L);
+
+        CircuitSummaryDTO summary = circuitService.getSummary();
+
+        assertThat(summary.total()).isEqualTo(10L);
+        assertThat(summary.active()).isEqualTo(7L);
+        assertThat(summary.online()).isEqualTo(5L);
+        assertThat(summary.inactive()).isEqualTo(3L);
+    }
+
+    @Test
+    void getAll_withOnlineTrue_shouldPassFilterToRepository() {
+        Page<CircuitProjection> page = new PageImpl<>(List.of());
+        when(circuitRepository.findAllCircuits(anyString(), eq(true), isNull(), any(Pageable.class))).thenReturn(page);
+
+        circuitService.getAll("", true, null, PageRequest.of(0, 10));
+
+        verify(circuitRepository).findAllCircuits("", true, null, PageRequest.of(0, 10));
+    }
+
+    @Test
+    void getAll_withActiveFalse_shouldPassFilterToRepository() {
+        Page<CircuitProjection> page = new PageImpl<>(List.of());
+        when(circuitRepository.findAllCircuits(anyString(), isNull(), eq(false), any(Pageable.class))).thenReturn(page);
+
+        circuitService.getAll("", null, false, PageRequest.of(0, 10));
+
+        verify(circuitRepository).findAllCircuits("", null, false, PageRequest.of(0, 10));
+    }
+
+    @Test
+    void getAll_withOnlineFalseAndActiveTrue_shouldPassBothFiltersToRepository() {
+        Page<CircuitProjection> page = new PageImpl<>(List.of());
+        when(circuitRepository.findAllCircuits(anyString(), eq(false), eq(true), any(Pageable.class))).thenReturn(page);
+
+        circuitService.getAll("", false, true, PageRequest.of(0, 10));
+
+        verify(circuitRepository).findAllCircuits("", false, true, PageRequest.of(0, 10));
     }
 
     @Test

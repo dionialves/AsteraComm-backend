@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
+import com.dionialves.AsteraComm.circuit.dto.CircuitSummaryDTO;
 import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
@@ -62,7 +63,7 @@ class CircuitControllerTest {
     @Test
     void getAll_shouldReturn200_paginated() throws Exception {
         var page = new PageImpl<CircuitProjection>(List.of(), PageRequest.of(0, 10), 0);
-        when(circuitService.getAll(anyString(), any())).thenReturn(page);
+        when(circuitService.getAll(anyString(), isNull(), isNull(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/circuits"))
                 .andExpect(status().isOk())
@@ -72,12 +73,12 @@ class CircuitControllerTest {
     @Test
     void getAll_withSearch_shouldPassParam() throws Exception {
         var page = new PageImpl<CircuitProjection>(List.of(), PageRequest.of(0, 10), 0);
-        when(circuitService.getAll(eq("100000"), any())).thenReturn(page);
+        when(circuitService.getAll(eq("100000"), isNull(), isNull(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/circuits?search=100000"))
                 .andExpect(status().isOk());
 
-        verify(circuitService).getAll(eq("100000"), any());
+        verify(circuitService).getAll(eq("100000"), isNull(), isNull(), any());
     }
 
     @Test
@@ -138,6 +139,54 @@ class CircuitControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isNotFound());
+    }
+
+    // === Novos testes US-041 — summary e filtros de listagem ===
+
+    @Test
+    void getSummary_shouldReturn200_withCorrectFields() throws Exception {
+        CircuitSummaryDTO summary = new CircuitSummaryDTO(10L, 7L, 5L, 3L);
+        when(circuitService.getSummary()).thenReturn(summary);
+
+        mockMvc.perform(get("/api/circuits/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(10))
+                .andExpect(jsonPath("$.active").value(7))
+                .andExpect(jsonPath("$.online").value(5))
+                .andExpect(jsonPath("$.inactive").value(3));
+    }
+
+    @Test
+    void getAll_withOnlineParam_shouldPassToService() throws Exception {
+        var page = new PageImpl<CircuitProjection>(List.of(), PageRequest.of(0, 10), 0);
+        when(circuitService.getAll(anyString(), eq(true), isNull(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/circuits?online=true"))
+                .andExpect(status().isOk());
+
+        verify(circuitService).getAll(anyString(), eq(true), isNull(), any());
+    }
+
+    @Test
+    void getAll_withStatusInactiveParam_shouldPassActiveFalseToService() throws Exception {
+        var page = new PageImpl<CircuitProjection>(List.of(), PageRequest.of(0, 10), 0);
+        when(circuitService.getAll(anyString(), isNull(), eq(false), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/circuits?status=INACTIVE"))
+                .andExpect(status().isOk());
+
+        verify(circuitService).getAll(anyString(), isNull(), eq(false), any());
+    }
+
+    @Test
+    void getAll_withOfflineFilter_shouldPassOnlineFalseAndActiveTrueToService() throws Exception {
+        var page = new PageImpl<CircuitProjection>(List.of(), PageRequest.of(0, 10), 0);
+        when(circuitService.getAll(anyString(), eq(false), eq(true), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/circuits?online=false&status=ACTIVE"))
+                .andExpect(status().isOk());
+
+        verify(circuitService).getAll(anyString(), eq(false), eq(true), any());
     }
 
     @Test

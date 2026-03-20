@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.circuit;
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.call.CallRepository;
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
+import com.dionialves.AsteraComm.circuit.dto.CircuitSummaryDTO;
 import com.dionialves.AsteraComm.customer.Customer;
 import com.dionialves.AsteraComm.customer.CustomerRepository;
 import com.dionialves.AsteraComm.did.DIDRepository;
@@ -29,8 +30,17 @@ public class CircuitService {
     private final PlanRepository planRepository;
     private final AsteriskProvisioningService asteriskProvisioningService;
 
-    public Page<CircuitProjection> getAll(String search, Pageable pageable) {
-        return circuitRepository.findAllCircuits(search, pageable);
+    public Page<CircuitProjection> getAll(String search, Boolean online, Boolean active, Pageable pageable) {
+        return circuitRepository.findAllCircuits(search, online, active, pageable);
+    }
+
+    public CircuitSummaryDTO getSummary() {
+        return new CircuitSummaryDTO(
+                circuitRepository.countAll(),
+                circuitRepository.countActive(),
+                circuitRepository.countOnline(),
+                circuitRepository.countInactive()
+        );
     }
 
     public Optional<Circuit> findByNumber(String number) {

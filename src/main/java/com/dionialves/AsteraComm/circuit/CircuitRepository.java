@@ -46,6 +46,15 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
             """, nativeQuery = true)
     List<CircuitProjection> findByCustomerIdProjected(@Param("customerId") Long customerId);
 
+    @Query(value = "SELECT COUNT(*) FROM asteracomm_circuits", nativeQuery = true)
+    long countAll();
+
+    @Query(value = "SELECT COUNT(*) FROM asteracomm_circuits WHERE active = true", nativeQuery = true)
+    long countActive();
+
+    @Query(value = "SELECT COUNT(*) FROM asteracomm_circuits WHERE active = false", nativeQuery = true)
+    long countInactive();
+
     @Query(value = """
             SELECT COUNT(DISTINCT c.number)
             FROM asteracomm_circuits c
@@ -84,9 +93,11 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
             JOIN asteracomm_customers cu ON cu.id = c.customer_id
             LEFT JOIN asteracomm_plans p ON p.id = c.plan_id
             LEFT JOIN last_status s ON s.endpoint = c.number
-            WHERE LOWER(c.number) LIKE LOWER(CONCAT('%', :search, '%'))
+            WHERE (LOWER(c.number) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(cu.name) LIKE LOWER(CONCAT('%', :search, '%'))
-            OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND (CAST(:online AS boolean) IS NULL OR (s.id IS NOT NULL) = CAST(:online AS boolean))
+            AND (CAST(:active AS boolean) IS NULL OR c.active = CAST(:active AS boolean))
             """, countQuery = """
             WITH last_status AS (
                 SELECT DISTINCT ON (endpoint) *
@@ -99,9 +110,14 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
             JOIN asteracomm_customers cu ON cu.id = c.customer_id
             LEFT JOIN asteracomm_plans p ON p.id = c.plan_id
             LEFT JOIN last_status s ON s.endpoint = c.number
-            WHERE LOWER(c.number) LIKE LOWER(CONCAT('%', :search, '%'))
+            WHERE (LOWER(c.number) LIKE LOWER(CONCAT('%', :search, '%'))
             OR LOWER(cu.name) LIKE LOWER(CONCAT('%', :search, '%'))
-            OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(s.ip) LIKE LOWER(CONCAT('%', :search, '%')))
+            AND (CAST(:online AS boolean) IS NULL OR (s.id IS NOT NULL) = CAST(:online AS boolean))
+            AND (CAST(:active AS boolean) IS NULL OR c.active = CAST(:active AS boolean))
             """, nativeQuery = true)
-    Page<CircuitProjection> findAllCircuits(@Param("search") String search, Pageable pageable);
+    Page<CircuitProjection> findAllCircuits(@Param("search") String search,
+                                            @Param("online") Boolean online,
+                                            @Param("active") Boolean active,
+                                            Pageable pageable);
 }
