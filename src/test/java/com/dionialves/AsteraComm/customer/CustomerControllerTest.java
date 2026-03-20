@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.customer;
 
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
@@ -39,6 +40,7 @@ class CustomerControllerTest {
     private CustomerController customerController;
 
     private Customer testCustomer;
+    private CustomerResponseDTO testCustomerDTO;
 
     @BeforeEach
     void setUp() {
@@ -49,6 +51,9 @@ class CustomerControllerTest {
         testCustomer.setCreatedAt(LocalDateTime.now());
         testCustomer.setUpdatedAt(LocalDateTime.now());
 
+        testCustomerDTO = new CustomerResponseDTO(1L, "Acme Corp", true, 2,
+                LocalDateTime.now(), LocalDateTime.now());
+
         mockMvc = MockMvcBuilders.standaloneSetup(customerController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
@@ -57,12 +62,61 @@ class CustomerControllerTest {
 
     @Test
     void getAll_shouldReturn200_withPage() throws Exception {
-        var page = new PageImpl<>(List.of(testCustomer), PageRequest.of(0, 10), 1);
-        when(customerService.getAll(any(), any())).thenReturn(page);
+        var page = new PageImpl<>(List.of(testCustomerDTO), PageRequest.of(0, 20), 1);
+        when(customerService.getAll(any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/customers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].name").value("Acme Corp"));
+    }
+
+    @Test
+    void getAll_withActiveStatus_shouldPassEnabledTrueToService() throws Exception {
+        var page = new PageImpl<>(List.of(testCustomerDTO), PageRequest.of(0, 20), 1);
+        when(customerService.getAll(any(), eq(true), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/customers").param("status", "ACTIVE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].enabled").value(true));
+
+        verify(customerService).getAll(any(), eq(true), any());
+    }
+
+    @Test
+    void getAll_withInactiveStatus_shouldPassEnabledFalseToService() throws Exception {
+        var dto = new CustomerResponseDTO(2L, "Inactive Corp", false, 0,
+                LocalDateTime.now(), LocalDateTime.now());
+        var page = new PageImpl<>(List.of(dto), PageRequest.of(0, 20), 1);
+        when(customerService.getAll(any(), eq(false), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/customers").param("status", "INACTIVE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].enabled").value(false));
+
+        verify(customerService).getAll(any(), eq(false), any());
+    }
+
+    @Test
+    void getAll_withNoStatus_shouldPassNullToService() throws Exception {
+        var page = new PageImpl<>(List.of(testCustomerDTO), PageRequest.of(0, 20), 1);
+        when(customerService.getAll(any(), eq((Boolean) null), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/customers"))
+                .andExpect(status().isOk());
+
+        verify(customerService).getAll(any(), eq((Boolean) null), any());
+    }
+
+    @Test
+    void getAll_shouldReturnCircuitCountInResponse() throws Exception {
+        var dto = new CustomerResponseDTO(1L, "Acme Corp", true, 5,
+                LocalDateTime.now(), LocalDateTime.now());
+        var page = new PageImpl<>(List.of(dto), PageRequest.of(0, 20), 1);
+        when(customerService.getAll(any(), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/customers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].circuitCount").value(5));
     }
 
     @Test

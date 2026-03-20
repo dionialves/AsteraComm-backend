@@ -2,6 +2,7 @@ package com.dionialves.AsteraComm.customer;
 
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,24 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CircuitRepository circuitRepository;
 
-    public Page<Customer> getAll(String search, Pageable pageable) {
-        if (search == null || search.isBlank()) {
-            return customerRepository.findAll(pageable);
+    public Page<CustomerResponseDTO> getAll(String search, Boolean enabled, Pageable pageable) {
+        boolean hasSearch = search != null && !search.isBlank();
+        Page<Customer> page;
+        if (enabled != null && hasSearch) {
+            page = customerRepository.findByEnabledAndNameContainingIgnoreCase(enabled, search, pageable);
+        } else if (enabled != null) {
+            page = customerRepository.findByEnabled(enabled, pageable);
+        } else if (hasSearch) {
+            page = customerRepository.findByNameContainingIgnoreCase(search, pageable);
+        } else {
+            page = customerRepository.findAll(pageable);
         }
-        return customerRepository.findByNameContainingIgnoreCase(search, pageable);
+        return page.map(this::toResponseDTO);
+    }
+
+    private CustomerResponseDTO toResponseDTO(Customer c) {
+        int count = (int) circuitRepository.countByCustomerId(c.getId());
+        return new CustomerResponseDTO(c.getId(), c.getName(), c.isEnabled(), count, c.getCreatedAt(), c.getUpdatedAt());
     }
 
     public Optional<Customer> findById(Long id) {

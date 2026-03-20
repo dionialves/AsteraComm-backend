@@ -2,6 +2,7 @@ package com.dionialves.AsteraComm.customer;
 
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,14 +54,76 @@ class CustomerServiceTest {
 
     @Test
     void getAll_shouldReturnPagedCustomers() {
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 20);
         Page<Customer> page = new PageImpl<>(List.of(testCustomer), pageable, 1);
         when(customerRepository.findAll(pageable)).thenReturn(page);
+        when(circuitRepository.countByCustomerId(1L)).thenReturn(2L);
 
-        Page<Customer> result = customerService.getAll("", pageable);
+        Page<CustomerResponseDTO> result = customerService.getAll("", null, pageable);
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getName()).isEqualTo("Acme Corp");
+        assertThat(result.getContent().get(0).name()).isEqualTo("Acme Corp");
+    }
+
+    @Test
+    void getAll_withActiveFilter_shouldQueryByEnabledTrue() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Customer> page = new PageImpl<>(List.of(testCustomer), pageable, 1);
+        when(customerRepository.findByEnabled(true, pageable)).thenReturn(page);
+        when(circuitRepository.countByCustomerId(1L)).thenReturn(0L);
+
+        Page<CustomerResponseDTO> result = customerService.getAll("", true, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).enabled()).isTrue();
+        verify(customerRepository).findByEnabled(true, pageable);
+        verify(customerRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void getAll_withInactiveFilter_shouldQueryByEnabledFalse() {
+        Customer inactive = new Customer();
+        inactive.setId(2L);
+        inactive.setName("Inactive Corp");
+        inactive.setEnabled(false);
+        inactive.setCreatedAt(LocalDateTime.now());
+        inactive.setUpdatedAt(LocalDateTime.now());
+
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Customer> page = new PageImpl<>(List.of(inactive), pageable, 1);
+        when(customerRepository.findByEnabled(false, pageable)).thenReturn(page);
+        when(circuitRepository.countByCustomerId(2L)).thenReturn(0L);
+
+        Page<CustomerResponseDTO> result = customerService.getAll("", false, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).enabled()).isFalse();
+        verify(customerRepository).findByEnabled(false, pageable);
+    }
+
+    @Test
+    void getAll_withSearchAndActiveFilter_shouldApplyBothFilters() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Customer> page = new PageImpl<>(List.of(testCustomer), pageable, 1);
+        when(customerRepository.findByEnabledAndNameContainingIgnoreCase(true, "acme", pageable)).thenReturn(page);
+        when(circuitRepository.countByCustomerId(1L)).thenReturn(1L);
+
+        Page<CustomerResponseDTO> result = customerService.getAll("acme", true, pageable);
+
+        assertThat(result.getContent()).hasSize(1);
+        verify(customerRepository).findByEnabledAndNameContainingIgnoreCase(true, "acme", pageable);
+    }
+
+    @Test
+    void getAll_shouldIncludeCircuitCountInResponse() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<Customer> page = new PageImpl<>(List.of(testCustomer), pageable, 1);
+        when(customerRepository.findAll(pageable)).thenReturn(page);
+        when(circuitRepository.countByCustomerId(1L)).thenReturn(3L);
+
+        Page<CustomerResponseDTO> result = customerService.getAll("", null, pageable);
+
+        assertThat(result.getContent().get(0).circuitCount()).isEqualTo(3);
     }
 
     // --- findById ---

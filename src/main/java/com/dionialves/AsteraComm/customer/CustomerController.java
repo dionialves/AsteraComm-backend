@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.customer;
 import com.dionialves.AsteraComm.circuit.CircuitProjection;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,10 +23,12 @@ public class CustomerController {
     private final CircuitRepository circuitRepository;
 
     @GetMapping
-    public Page<Customer> findAll(
+    public Page<CustomerResponseDTO> findAll(
             @RequestParam(defaultValue = "") String search,
-            @PageableDefault(size = 10, sort = "name") Pageable pageable) {
-        return customerService.getAll(search, pageable);
+            @RequestParam(required = false) String status,
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        Boolean enabled = "ACTIVE".equals(status) ? Boolean.TRUE : "INACTIVE".equals(status) ? Boolean.FALSE : null;
+        return customerService.getAll(search, enabled, pageable);
     }
 
     @GetMapping("/{id}")

@@ -19,6 +19,8 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
 
     boolean existsByCustomerId(Long customerId);
 
+    long countByCustomerId(Long customerId);
+
     @Query(value = """
             WITH last_status AS (
                 SELECT DISTINCT ON (endpoint) *
