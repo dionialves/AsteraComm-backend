@@ -6,6 +6,7 @@ import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
 import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
+import com.dionialves.AsteraComm.exception.ConflictException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -323,12 +324,12 @@ class DIDServiceTest {
     }
 
     @Test
-    void delete_shouldThrowBusinessException_whenLinkedToCircuit() {
+    void delete_shouldThrowConflictException_whenLinkedToCircuit() {
         testDID.setCircuit(testCircuit);
         when(didRepository.findById(1L)).thenReturn(Optional.of(testDID));
 
         assertThatThrownBy(() -> didService.delete(1L))
-                .isInstanceOf(BusinessException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("vinculado a um circuito");
     }
 

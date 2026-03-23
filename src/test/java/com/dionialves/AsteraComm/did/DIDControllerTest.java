@@ -5,6 +5,7 @@ import com.dionialves.AsteraComm.did.dto.DIDCircuitDTO;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
 import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
+import com.dionialves.AsteraComm.exception.ConflictException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -213,12 +214,12 @@ class DIDControllerTest {
     }
 
     @Test
-    void delete_shouldReturn400_whenLinkedToCircuit() throws Exception {
-        doThrow(new BusinessException("vinculado a um circuito"))
+    void delete_shouldReturn409_whenLinkedToCircuit() throws Exception {
+        doThrow(new ConflictException("vinculado a um circuito"))
                 .when(didService).delete(1L);
 
         mockMvc.perform(delete("/api/dids/1"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
     }
 
     @Test

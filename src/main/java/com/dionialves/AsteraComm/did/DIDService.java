@@ -7,6 +7,7 @@ import com.dionialves.AsteraComm.did.dto.DIDCircuitDTO;
 import com.dionialves.AsteraComm.did.dto.DIDCreateDTO;
 import com.dionialves.AsteraComm.did.dto.DIDResponseDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
+import com.dionialves.AsteraComm.exception.ConflictException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -125,7 +126,7 @@ public class DIDService {
                 .orElseThrow(() -> new NotFoundException("DID não encontrado"));
 
         if (did.getCircuit() != null) {
-            throw new BusinessException("DID não pode ser removido pois está vinculado a um circuito");
+            throw new ConflictException("DID não pode ser removido pois está vinculado a um circuito");
         }
 
         didRepository.delete(did);
