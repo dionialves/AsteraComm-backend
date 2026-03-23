@@ -104,12 +104,49 @@ class PlanControllerTest {
     @Test
     void getAll_shouldReturn200_paginated() throws Exception {
         var page = new PageImpl<>(List.of(testPlan), PageRequest.of(0, 10), 1);
-        when(planService.getAll(any(), any())).thenReturn(page);
+        when(planService.getAll(any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/plans"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content[0].name").value("Plano Básico"));
+    }
+
+    @Test
+    void findAll_shouldFilterByActiveTrue() throws Exception {
+        testPlan.setActive(true);
+        var page = new PageImpl<>(List.of(testPlan), PageRequest.of(0, 10), 1);
+        when(planService.getAll(any(), eq(true), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/plans").param("active", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].active").value(true));
+    }
+
+    @Test
+    void findAll_shouldFilterByActiveFalse() throws Exception {
+        Plan inactivePlan = new Plan();
+        inactivePlan.setId(2L);
+        inactivePlan.setName("Plano Inativo");
+        inactivePlan.setActive(false);
+        var page = new PageImpl<>(List.of(inactivePlan), PageRequest.of(0, 10), 1);
+        when(planService.getAll(any(), eq(false), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/plans").param("active", "false"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].active").value(false));
+    }
+
+    @Test
+    void update_shouldUpdateActiveField() throws Exception {
+        testPlan.setActive(false);
+        when(planService.update(eq(1L), any(PlanUpdateDTO.class))).thenReturn(testPlan);
+
+        mockMvc.perform(put("/api/plans/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\": false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
     }
 
     // --- GET /api/plans/{id} ---

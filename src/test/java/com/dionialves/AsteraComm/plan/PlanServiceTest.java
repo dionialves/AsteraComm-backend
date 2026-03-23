@@ -91,10 +91,54 @@ class PlanServiceTest {
         Page<Plan> page = new PageImpl<>(List.of(testPlan));
         when(planRepository.findAll(any(Pageable.class))).thenReturn(page);
 
-        Page<Plan> result = planService.getAll("", PageRequest.of(0, 10));
+        Page<Plan> result = planService.getAll("", null, PageRequest.of(0, 10));
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         verify(planRepository).findAll(PageRequest.of(0, 10));
+    }
+
+    @Test
+    void getAll_shouldReturnAll_whenActiveIsNull() {
+        Page<Plan> page = new PageImpl<>(List.of(testPlan));
+        when(planRepository.findAll(any(Pageable.class))).thenReturn(page);
+
+        Page<Plan> result = planService.getAll("", null, PageRequest.of(0, 10));
+
+        verify(planRepository).findAll(PageRequest.of(0, 10));
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void getAll_shouldReturnOnlyActive_whenActiveIsTrue() {
+        Page<Plan> page = new PageImpl<>(List.of(testPlan));
+        when(planRepository.findByActive(eq(true), any(Pageable.class))).thenReturn(page);
+
+        Page<Plan> result = planService.getAll("", true, PageRequest.of(0, 10));
+
+        verify(planRepository).findByActive(true, PageRequest.of(0, 10));
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void getAll_shouldReturnOnlyInactive_whenActiveIsFalse() {
+        Page<Plan> page = new PageImpl<>(List.of());
+        when(planRepository.findByActive(eq(false), any(Pageable.class))).thenReturn(page);
+
+        Page<Plan> result = planService.getAll("", false, PageRequest.of(0, 10));
+
+        verify(planRepository).findByActive(false, PageRequest.of(0, 10));
+        assertThat(result.getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void getAll_shouldFilterByActiveAndSearch_whenBothProvided() {
+        Page<Plan> page = new PageImpl<>(List.of(testPlan));
+        when(planRepository.findByActiveAndNameContainingIgnoreCase(eq(true), eq("básico"), any(Pageable.class))).thenReturn(page);
+
+        Page<Plan> result = planService.getAll("básico", true, PageRequest.of(0, 10));
+
+        verify(planRepository).findByActiveAndNameContainingIgnoreCase(true, "básico", PageRequest.of(0, 10));
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
     // --- findById ---
@@ -131,6 +175,16 @@ class PlanServiceTest {
                 p.getPackageTotalMinutes() == null
         ));
         assertThat(result.getName()).isEqualTo("Plano Básico");
+    }
+
+    @Test
+    void create_shouldSetActiveTrue_byDefault() {
+        when(planRepository.existsByName("Plano Básico")).thenReturn(false);
+        when(planRepository.save(any(Plan.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Plan result = planService.create(nonePackageDTO());
+
+        assertThat(result.isActive()).isTrue();
     }
 
     @Test
@@ -195,7 +249,7 @@ class PlanServiceTest {
 
     @Test
     void update_shouldUpdateName_whenNewNameIsUnique() {
-        PlanUpdateDTO dto = new PlanUpdateDTO("Plano Atualizado", null, null, null, null, null, null, null, null, null, null, null);
+        PlanUpdateDTO dto = new PlanUpdateDTO("Plano Atualizado", null, null, null, null, null, null, null, null, null, null, null, null);
         when(planRepository.findById(1L)).thenReturn(Optional.of(testPlan));
         when(planRepository.existsByName("Plano Atualizado")).thenReturn(false);
         when(planRepository.save(any(Plan.class))).thenReturn(testPlan);
@@ -207,7 +261,7 @@ class PlanServiceTest {
 
     @Test
     void update_shouldThrowBusinessException_whenNewNameAlreadyExists() {
-        PlanUpdateDTO dto = new PlanUpdateDTO("Nome Duplicado", null, null, null, null, null, null, null, null, null, null, null);
+        PlanUpdateDTO dto = new PlanUpdateDTO("Nome Duplicado", null, null, null, null, null, null, null, null, null, null, null, null);
         when(planRepository.findById(1L)).thenReturn(Optional.of(testPlan));
         when(planRepository.existsByName("Nome Duplicado")).thenReturn(true);
 
@@ -218,7 +272,7 @@ class PlanServiceTest {
 
     @Test
     void update_shouldThrowNotFoundException_whenPlanNotExists() {
-        PlanUpdateDTO dto = new PlanUpdateDTO("X", null, null, null, null, null, null, null, null, null, null, null);
+        PlanUpdateDTO dto = new PlanUpdateDTO("X", null, null, null, null, null, null, null, null, null, null, null, null);
         when(planRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> planService.update(99L, dto))
@@ -230,7 +284,7 @@ class PlanServiceTest {
     void update_shouldChangePackageType_toUnified() {
         PlanUpdateDTO dto = new PlanUpdateDTO(
                 null, null, null, null, null, null,
-                PackageType.UNIFIED, 300, null, null, null, null
+                PackageType.UNIFIED, 300, null, null, null, null, null
         );
         when(planRepository.findById(1L)).thenReturn(Optional.of(testPlan));
         when(planRepository.save(any(Plan.class))).thenReturn(testPlan);
@@ -241,6 +295,36 @@ class PlanServiceTest {
                 p.getPackageType() == PackageType.UNIFIED &&
                 p.getPackageTotalMinutes() == 300
         ));
+    }
+
+    @Test
+    void update_shouldUpdateActive_toFalse() {
+        PlanUpdateDTO dto = new PlanUpdateDTO(
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, false
+        );
+        testPlan.setActive(true);
+        when(planRepository.findById(1L)).thenReturn(Optional.of(testPlan));
+        when(planRepository.save(any(Plan.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Plan result = planService.update(1L, dto);
+
+        verify(planRepository).save(argThat(p -> !p.isActive()));
+    }
+
+    @Test
+    void update_shouldUpdateActive_toTrue() {
+        PlanUpdateDTO dto = new PlanUpdateDTO(
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, true
+        );
+        testPlan.setActive(false);
+        when(planRepository.findById(1L)).thenReturn(Optional.of(testPlan));
+        when(planRepository.save(any(Plan.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Plan result = planService.update(1L, dto);
+
+        verify(planRepository).save(argThat(Plan::isActive));
     }
 
     // --- delete ---

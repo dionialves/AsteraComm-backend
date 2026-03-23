@@ -20,5 +20,6 @@ public record PlanUpdateDTO(
         Integer packageFixedLocal,
         Integer packageFixedLongDistance,
         Integer packageMobileLocal,
-        Integer packageMobileLongDistance
+        Integer packageMobileLongDistance,
+        Boolean active
 ) implements PackageValidatable {}

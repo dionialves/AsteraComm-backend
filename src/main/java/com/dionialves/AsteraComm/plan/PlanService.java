@@ -18,11 +18,16 @@ public class PlanService {
 
     private final PlanRepository planRepository;
 
-    public Page<Plan> getAll(String search, Pageable pageable) {
-        if (search == null || search.isBlank()) {
-            return planRepository.findAll(pageable);
+    public Page<Plan> getAll(String search, Boolean active, Pageable pageable) {
+        boolean hasSearch = search != null && !search.isBlank();
+        if (active == null) {
+            return hasSearch
+                    ? planRepository.findByNameContainingIgnoreCase(search, pageable)
+                    : planRepository.findAll(pageable);
         }
-        return planRepository.findByNameContainingIgnoreCase(search, pageable);
+        return hasSearch
+                ? planRepository.findByActiveAndNameContainingIgnoreCase(active, search, pageable)
+                : planRepository.findByActive(active, pageable);
     }
 
     public Optional<Plan> findById(Long id) {
@@ -78,6 +83,8 @@ public class PlanService {
             plan.setPackageMobileLocal(dto.packageMobileLocal());
             plan.setPackageMobileLongDistance(dto.packageMobileLongDistance());
         }
+
+        if (dto.active() != null) plan.setActive(dto.active());
 
         return planRepository.save(plan);
     }

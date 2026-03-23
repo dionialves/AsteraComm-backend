@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/plans")
@@ -22,8 +24,9 @@ public class PlanController {
     @GetMapping
     public Page<Plan> findAll(
             @RequestParam(defaultValue = "") String search,
+            @RequestParam Optional<Boolean> active,
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        return planService.getAll(search, pageable);
+        return planService.getAll(search, active.orElse(null), pageable);
     }
 
     @GetMapping("/{id}")

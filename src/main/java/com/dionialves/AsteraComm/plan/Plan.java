@@ -56,6 +56,9 @@ public class Plan {
     @Column(name = "package_mobile_long_distance")
     private Integer packageMobileLongDistance;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

@@ -10,6 +10,10 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
 
     Page<Plan> findByNameContainingIgnoreCase(String search, Pageable pageable);
 
+    Page<Plan> findByActive(boolean active, Pageable pageable);
+
+    Page<Plan> findByActiveAndNameContainingIgnoreCase(boolean active, String search, Pageable pageable);
+
     // Returns false until client entity is implemented
     default boolean isLinkedToClient(Long id) {
         return false;
