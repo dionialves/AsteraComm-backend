@@ -40,6 +40,7 @@ class TrunkServiceTest {
     @BeforeEach
     void setUp() {
         testTrunk = new Trunk();
+        testTrunk.setId(1L);
         testTrunk.setName("provedor1");
         testTrunk.setHost("sip.provedor1.com.br");
         testTrunk.setUsername("user123");
@@ -59,7 +60,7 @@ class TrunkServiceTest {
 
     @Test
     void findByName_shouldReturnTrunk_whenExists() {
-        when(trunkRepository.findById("provedor1")).thenReturn(Optional.of(testTrunk));
+        when(trunkRepository.findByName("provedor1")).thenReturn(Optional.of(testTrunk));
 
         Optional<Trunk> result = trunkService.findByName("provedor1");
 
@@ -69,7 +70,7 @@ class TrunkServiceTest {
 
     @Test
     void findByName_shouldReturnEmpty_whenNotExists() {
-        when(trunkRepository.findById("inexistente")).thenReturn(Optional.empty());
+        when(trunkRepository.findByName("inexistente")).thenReturn(Optional.empty());
 
         Optional<Trunk> result = trunkService.findByName("inexistente");
 
@@ -79,7 +80,7 @@ class TrunkServiceTest {
     @Test
     void create_shouldSaveTrunkAndCallProvision() {
         TrunkCreateDTO dto = new TrunkCreateDTO("provedor2", "sip.prov2.com", "user2", "pass2", null);
-        when(trunkRepository.existsById("provedor2")).thenReturn(false);
+        when(trunkRepository.existsByName("provedor2")).thenReturn(false);
         when(trunkRepository.save(any(Trunk.class))).thenReturn(testTrunk);
 
         trunkService.create(dto);
@@ -95,7 +96,7 @@ class TrunkServiceTest {
     @Test
     void create_shouldThrowBusinessException_whenNameAlreadyExists() {
         TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "sip.prov.com", "user", "pass", null);
-        when(trunkRepository.existsById("provedor1")).thenReturn(true);
+        when(trunkRepository.existsByName("provedor1")).thenReturn(true);
 
         assertThatThrownBy(() -> trunkService.create(dto))
                 .isInstanceOf(BusinessException.class)
@@ -105,7 +106,7 @@ class TrunkServiceTest {
     @Test
     void update_shouldUpdateFieldsAndCallReprovision() {
         TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "novo.host.com", "newuser", "newpass", null);
-        when(trunkRepository.findById("provedor1")).thenReturn(Optional.of(testTrunk));
+        when(trunkRepository.findByName("provedor1")).thenReturn(Optional.of(testTrunk));
         when(trunkRepository.save(any(Trunk.class))).thenReturn(testTrunk);
 
         trunkService.update("provedor1", dto);
@@ -120,7 +121,7 @@ class TrunkServiceTest {
     @Test
     void update_shouldNotChangePassword_whenPasswordIsBlank() {
         TrunkCreateDTO dto = new TrunkCreateDTO("provedor1", "novo.host.com", "newuser", "", null);
-        when(trunkRepository.findById("provedor1")).thenReturn(Optional.of(testTrunk));
+        when(trunkRepository.findByName("provedor1")).thenReturn(Optional.of(testTrunk));
         when(trunkRepository.save(any(Trunk.class))).thenReturn(testTrunk);
 
         trunkService.update("provedor1", dto);
@@ -131,7 +132,7 @@ class TrunkServiceTest {
     @Test
     void update_shouldThrowNotFoundException_whenNotExists() {
         TrunkCreateDTO dto = new TrunkCreateDTO("inexistente", "host.com", "user", "pass", null);
-        when(trunkRepository.findById("inexistente")).thenReturn(Optional.empty());
+        when(trunkRepository.findByName("inexistente")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> trunkService.update("inexistente", dto))
                 .isInstanceOf(NotFoundException.class)
@@ -140,7 +141,7 @@ class TrunkServiceTest {
 
     @Test
     void delete_shouldCleanStatusCallDeprovisionAndDeleteTrunk() {
-        when(trunkRepository.findById("provedor1")).thenReturn(Optional.of(testTrunk));
+        when(trunkRepository.findByName("provedor1")).thenReturn(Optional.of(testTrunk));
 
         trunkService.delete("provedor1");
 
@@ -151,7 +152,7 @@ class TrunkServiceTest {
 
     @Test
     void delete_shouldThrowNotFoundException_whenNotExists() {
-        when(trunkRepository.findById("inexistente")).thenReturn(Optional.empty());
+        when(trunkRepository.findByName("inexistente")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> trunkService.delete("inexistente"))
                 .isInstanceOf(NotFoundException.class)

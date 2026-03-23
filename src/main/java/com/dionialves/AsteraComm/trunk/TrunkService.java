@@ -25,12 +25,12 @@ public class TrunkService {
     }
 
     public Optional<Trunk> findByName(String name) {
-        return trunkRepository.findById(name);
+        return trunkRepository.findByName(name);
     }
 
     @Transactional
     public Trunk create(TrunkCreateDTO dto) {
-        if (trunkRepository.existsById(dto.name())) {
+        if (trunkRepository.existsByName(dto.name())) {
             throw new BusinessException("Tronco já existe com este nome");
         }
 
@@ -49,7 +49,7 @@ public class TrunkService {
 
     @Transactional
     public Trunk update(String name, TrunkCreateDTO dto) {
-        Trunk trunk = trunkRepository.findById(name)
+        Trunk trunk = trunkRepository.findByName(name)
                 .orElseThrow(() -> new NotFoundException("Tronco não encontrado"));
 
         trunk.setHost(dto.host());
@@ -67,7 +67,7 @@ public class TrunkService {
 
     @Transactional
     public void delete(String name) {
-        Trunk trunk = trunkRepository.findById(name)
+        Trunk trunk = trunkRepository.findByName(name)
                 .orElseThrow(() -> new NotFoundException("Tronco não encontrado"));
 
         trunkRegistrationStatusRepository.deleteByTrunkName(name);

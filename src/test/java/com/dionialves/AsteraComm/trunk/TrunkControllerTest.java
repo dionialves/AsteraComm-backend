@@ -41,6 +41,7 @@ class TrunkControllerTest {
     @BeforeEach
     void setUp() {
         testTrunk = new Trunk();
+        testTrunk.setId(1L);
         testTrunk.setName("provedor1");
         testTrunk.setHost("sip.provedor1.com.br");
         testTrunk.setUsername("user123");
@@ -79,6 +80,7 @@ class TrunkControllerTest {
 
         mockMvc.perform(get("/api/trunks/provedor1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("provedor1"))
                 .andExpect(jsonPath("$.host").value("sip.provedor1.com.br"));
     }

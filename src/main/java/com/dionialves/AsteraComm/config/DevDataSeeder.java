@@ -221,8 +221,8 @@ public class DevDataSeeder implements CommandLineRunner {
     }
 
     private Trunk criarTronco() {
-        if (trunkRepository.existsById("dev-operadora")) {
-            return trunkRepository.findById("dev-operadora").orElseThrow();
+        if (trunkRepository.existsByName("dev-operadora")) {
+            return trunkRepository.findByName("dev-operadora").orElseThrow();
         }
 
         Trunk trunk = new Trunk();

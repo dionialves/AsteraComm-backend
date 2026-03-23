@@ -6,7 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface TrunkRepository extends JpaRepository<Trunk, String> {
+import java.util.Optional;
+
+public interface TrunkRepository extends JpaRepository<Trunk, Long> {
+
+    Optional<Trunk> findByName(String name);
+
+    boolean existsByName(String name);
 
     @Query(value = """
             SELECT COUNT(DISTINCT t.name)
@@ -27,6 +33,7 @@ public interface TrunkRepository extends JpaRepository<Trunk, String> {
                 ORDER BY trunk_name, id DESC
             )
             SELECT
+                t.id AS id,
                 t.name AS name,
                 t.host AS host,
                 t.username AS username,
