@@ -85,12 +85,14 @@ public class DashboardService {
                 .limit(10)
                 .collect(Collectors.toList());
 
-        List<DashboardDTO.TopCircuit> topCircuits = consumptionRaw.stream()
-                .map(row -> new DashboardDTO.TopCircuit(
+        List<DashboardDTO.TopCircuit> topCircuits = Stream.concat(
+                consumptionRaw.stream().map(row -> new DashboardDTO.TopCircuit(
                         (String) row[1],
                         (String) row[0],
                         ((Number) row[3]).longValue(),
-                        ((Number) row[4]).longValue()))
+                        ((Number) row[4]).longValue())),
+                perCategoryRaw.stream().map(this::toTopCircuitPerCategory))
+                .sorted(Comparator.comparingLong(DashboardDTO.TopCircuit::usedMinutes).reversed())
                 .limit(10)
                 .collect(Collectors.toList());
 
@@ -161,6 +163,23 @@ public class DashboardService {
         long limitMinutes = ((Number) row[4]).longValue();
         double percent = limitMinutes > 0 ? (usedMinutes * 100.0) / limitMinutes : 0.0;
         return new DashboardDTO.CircuitConsumption(circuit, customerName, planName, usedMinutes, limitMinutes, percent);
+    }
+
+    private DashboardDTO.TopCircuit toTopCircuitPerCategory(Object[] row) {
+        String circuit      = (String) row[0];
+        String customerName = (String) row[1];
+        long usedMinutes = ((Number) row[7]).longValue()
+                         + ((Number) row[8]).longValue()
+                         + ((Number) row[9]).longValue()
+                         + ((Number) row[10]).longValue();
+        long limitMinutes = 0;
+        for (int i = 3; i <= 6; i++) {
+            if (row[i] != null) {
+                int v = ((Number) row[i]).intValue();
+                if (v > 0) limitMinutes += v;
+            }
+        }
+        return new DashboardDTO.TopCircuit(customerName, circuit, usedMinutes, limitMinutes);
     }
 
     private static final Map<String, String> CATEGORY_LABELS = Map.of(

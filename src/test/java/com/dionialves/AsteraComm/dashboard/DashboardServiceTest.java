@@ -396,6 +396,68 @@ class DashboardServiceTest {
         assertThat(result.nearLimitCircuits().get(0).planName()).isEqualTo("Plano Z — Móvel Local");
     }
 
+    // -------------------------------------------------------------------------
+    // Top 10 circuitos por consumo — PER_CATEGORY
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getDashboard_topCircuits_includesPerCategoryCircuit() {
+        stubCircuits(1L, 1L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        100, 100, 100, 100,
+                        30L, 20L, 10L, 5L) // total usado = 65
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        assertThat(result.topCircuits()).hasSize(1);
+        assertThat(result.topCircuits().get(0).circuit()).isEqualTo("2001");
+        assertThat(result.topCircuits().get(0).usedMinutes()).isEqualTo(65L);
+        assertThat(result.topCircuits().get(0).limitMinutes()).isEqualTo(400L);
+    }
+
+    @Test
+    void getDashboard_topCircuits_sortedByUsedMinutesDescMixed() {
+        stubCircuits(2L, 2L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                consumptionRow("1001", "Cliente A", "Plano X", 80L, 100L)  // UNIFIED 80 min
+        ));
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        200, null, null, null,
+                        90L, 0L, 0L, 0L) // PER_CATEGORY 90 min — deve aparecer primeiro
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        assertThat(result.topCircuits()).hasSize(2);
+        assertThat(result.topCircuits().get(0).circuit()).isEqualTo("2001");
+        assertThat(result.topCircuits().get(1).circuit()).isEqualTo("1001");
+    }
+
+    @Test
+    void getDashboard_topCircuits_perCategoryAggregatesAllCategories() {
+        stubCircuits(1L, 1L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        50, 60, null, 80,          // limites: 50+60+80 = 190 (null ignorado)
+                        10L, 20L, 5L, 15L)          // usados: 10+20+5+15 = 50
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        DashboardDTO.TopCircuit top = result.topCircuits().get(0);
+        assertThat(top.usedMinutes()).isEqualTo(50L);
+        assertThat(top.limitMinutes()).isEqualTo(190L);
+    }
+
     private Object[] consumptionRow(String circuit, String customer, String plan, long used, long limit) {
         return new Object[] { circuit, customer, plan, used, limit };
     }
