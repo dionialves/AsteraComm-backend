@@ -54,18 +54,6 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/{id}/disable")
-    public ResponseEntity<Void> disable(@PathVariable Long id) {
-        userService.disable(id);
-        return ResponseEntity.ok().build();
-    }
-
-    @PatchMapping("/{id}/enable")
-    public ResponseEntity<Void> enable(@PathVariable Long id) {
-        userService.enable(id);
-        return ResponseEntity.ok().build();
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);

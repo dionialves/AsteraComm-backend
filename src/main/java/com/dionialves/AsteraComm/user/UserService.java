@@ -69,6 +69,9 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
 
+        if (dto.name() != null) user.setName(dto.name());
+        if (dto.enabled() != null) user.setEnabled(dto.enabled());
+
         User saved = userRepository.save(user);
         return new UserResponseDTO(saved);
     }
@@ -87,22 +90,6 @@ public class UserService {
             throw new NotFoundException("User not found with ID: " + id);
         }
         userRepository.deleteById(id);
-    }
-
-    public void disable(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
-
-        user.setEnabled(false);
-        userRepository.save(user);
-    }
-
-    public void enable(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found with ID: " + id));
-
-        user.setEnabled(true);
-        userRepository.save(user);
     }
 
     public UserResponseDTO getCurrentUser() {
