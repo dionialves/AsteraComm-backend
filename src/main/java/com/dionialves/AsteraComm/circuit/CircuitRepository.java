@@ -18,7 +18,12 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
 
     Optional<Circuit> findByNumber(String number);
 
-    @Query("SELECT MAX(c.number) FROM Circuit c")
+    @Query(value = """
+            SELECT MAX(c.number)
+                FROM asteracomm_circuits c
+                WHERE c.number ~ '^[0-9]+$'
+                  AND CAST(c.number AS BIGINT) BETWEEN 100000 AND 999999
+            """, nativeQuery = true)
     Optional<String> findMaxCode();
 
     boolean existsByCustomerId(Long customerId);
@@ -123,7 +128,7 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
             AND (CAST(:active AS boolean) IS NULL OR c.active = CAST(:active AS boolean))
             """, nativeQuery = true)
     Page<CircuitProjection> findAllCircuits(@Param("search") String search,
-                                            @Param("online") Boolean online,
-                                            @Param("active") Boolean active,
-                                            Pageable pageable);
+            @Param("online") Boolean online,
+            @Param("active") Boolean active,
+            Pageable pageable);
 }
