@@ -39,7 +39,8 @@ public class CustomerService {
 
     private CustomerResponseDTO toResponseDTO(Customer c) {
         int count = (int) circuitRepository.countByCustomerId(c.getId());
-        return new CustomerResponseDTO(c.getId(), c.getName(), c.isEnabled(), count, c.getCreatedAt(), c.getUpdatedAt());
+        return new CustomerResponseDTO(c.getId(), c.getName(), c.isEnabled(), count, c.getCreatedAt(),
+                c.getUpdatedAt());
     }
 
     public List<CustomerSummaryDTO> findAllSummary() {
@@ -52,8 +53,17 @@ public class CustomerService {
 
     public Customer create(CustomerCreateDTO dto) {
         Customer customer = new Customer();
-        customer.setName(dto.name());
-        customer.setEnabled(dto.enabled() == null || dto.enabled());
+
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new BusinessException("O nome do cliente é obrigatório.");
+        }
+
+        if (dto.getName().length() < 5 || dto.getName().length() > 100) {
+            throw new BusinessException("O nome do cliente deve conter entre 5 e 100 caracteres.");
+        }
+
+        customer.setName(dto.getName());
+        customer.setEnabled(dto.getEnabled() == null || dto.getEnabled());
         customer.setCreatedAt(LocalDateTime.now());
         customer.setUpdatedAt(LocalDateTime.now());
         return customerRepository.save(customer);
@@ -62,8 +72,8 @@ public class CustomerService {
     public Customer update(Long id, CustomerCreateDTO dto) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
-        customer.setName(dto.name());
-        customer.setEnabled(dto.enabled() == null || dto.enabled());
+        customer.setName(dto.getName());
+        customer.setEnabled(dto.getEnabled() == null || dto.getEnabled());
         customer.setUpdatedAt(LocalDateTime.now());
         return customerRepository.save(customer);
     }

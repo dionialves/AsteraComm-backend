@@ -2,6 +2,8 @@ package com.dionialves.AsteraComm.customer;
 
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +42,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody CustomerCreateDTO dto) {
+    public ResponseEntity<?> create(@Valid @RequestBody CustomerCreateDTO dto) {
         Customer customer = customerService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(customer);
     }
