@@ -45,7 +45,7 @@ class SecurityFilterTest {
 
     @Test
     void shouldSetAuthenticationContext_whenValidBearerToken() throws Exception {
-        User user = new User("Test", "user@test.com", "encoded", UserRole.USER);
+        User user = new User("Test", "user@test.com", "encoded", UserRole.ADMIN);
         when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
         when(tokenService.validateToken("valid-token")).thenReturn("user@test.com");
         when(userRepository.findByUsername("user@test.com")).thenReturn(user);

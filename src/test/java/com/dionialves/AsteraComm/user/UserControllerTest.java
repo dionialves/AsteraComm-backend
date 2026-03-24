@@ -39,7 +39,7 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        userResponseDTO = new UserResponseDTO(1L, "Test User", "user@test.com", UserRole.USER, true,
+        userResponseDTO = new UserResponseDTO(1L, "Test User", "user@test.com", UserRole.ADMIN, true,
                 LocalDateTime.now(), LocalDateTime.now());
 
         mockMvc = MockMvcBuilders.standaloneSetup(userController)

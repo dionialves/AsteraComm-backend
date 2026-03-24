@@ -32,13 +32,6 @@ public class SecurityConfigurations {
                                 "/api/auth/login")
                         .permitAll()
 
-                        .requestMatchers(
-                                "/api/users",
-                                "/api/users/**",
-                                "/api/audit",
-                                "/api/audit/**")
-                        .hasRole("SUPER_ADMIN")
-
                         .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -1,9 +1,7 @@
 package com.dionialves.AsteraComm.user;
 
 public enum UserRole {
-    SUPER_ADMIN("super_admin"),
-    ADMIN("admin"),
-    USER("user");
+    ADMIN("admin");
 
     private String role;
 

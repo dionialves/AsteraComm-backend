@@ -19,7 +19,7 @@ class TokenServiceTest {
     }
 
     private User buildUser(String username) {
-        return new User("Test User", username, "encoded-password", UserRole.USER);
+        return new User("Test User", username, "encoded-password", UserRole.ADMIN);
     }
 
     @Test

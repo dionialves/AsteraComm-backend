@@ -51,7 +51,7 @@ class AuthenticationControllerTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new User("Test User", "user@test.com", "encoded", UserRole.USER);
+        testUser = new User("Test User", "user@test.com", "encoded", UserRole.ADMIN);
         mockMvc = MockMvcBuilders.standaloneSetup(authenticationController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

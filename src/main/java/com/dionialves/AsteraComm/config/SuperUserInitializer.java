@@ -48,7 +48,7 @@ public class SuperUserInitializer implements ApplicationRunner {
         superUser.setName(superName);
         superUser.setUsername(superUsername);
         superUser.setPassword(passwordEncoder.encode(superPassword));
-        superUser.setRole(UserRole.SUPER_ADMIN);
+        superUser.setRole(UserRole.ADMIN);
         superUser.setEnabled(true);
 
         userRepository.save(superUser);

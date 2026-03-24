@@ -41,7 +41,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        testUser = new User("Test User", "user@test.com", "encoded-password", UserRole.USER);
+        testUser = new User("Test User", "user@test.com", "encoded-password", UserRole.ADMIN);
         testUser.setId(1L);
     }
 
@@ -90,7 +90,7 @@ class UserServiceTest {
 
     @Test
     void create_shouldEncodePasswordBeforeSaving() {
-        UserCreateDTO dto = new UserCreateDTO("New User", "new@test.com", "rawpassword", UserRole.USER);
+        UserCreateDTO dto = new UserCreateDTO("New User", "new@test.com", "rawpassword");
         when(userRepository.existsByUsername("new@test.com")).thenReturn(false);
         when(passwordEncoder.encode("rawpassword")).thenReturn("encoded-rawpassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
@@ -103,7 +103,7 @@ class UserServiceTest {
 
     @Test
     void create_shouldThrowBusinessException_whenUsernameAlreadyExists() {
-        UserCreateDTO dto = new UserCreateDTO("Test User", "user@test.com", "password123", UserRole.USER);
+        UserCreateDTO dto = new UserCreateDTO("Test User", "user@test.com", "password123");
         when(userRepository.existsByUsername("user@test.com")).thenReturn(true);
 
         assertThatThrownBy(() -> userService.create(dto))
@@ -113,7 +113,7 @@ class UserServiceTest {
 
     @Test
     void update_shouldUpdateFieldsAndSave() {
-        UserUpdateDTO dto = new UserUpdateDTO("Updated Name", UserRole.ADMIN, true);
+        UserUpdateDTO dto = new UserUpdateDTO("Updated Name", true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -125,7 +125,7 @@ class UserServiceTest {
 
     @Test
     void update_shouldThrowNotFoundException_whenUserNotExists() {
-        UserUpdateDTO dto = new UserUpdateDTO("Updated Name", UserRole.ADMIN, true);
+        UserUpdateDTO dto = new UserUpdateDTO("Updated Name", true);
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userService.update(99L, dto))

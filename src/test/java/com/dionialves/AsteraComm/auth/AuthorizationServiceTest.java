@@ -24,7 +24,7 @@ class AuthorizationServiceTest {
 
     @Test
     void loadUserByUsername_shouldReturnUser_whenExists() {
-        User user = new User("Test User", "user@test.com", "encoded", UserRole.USER);
+        User user = new User("Test User", "user@test.com", "encoded", UserRole.ADMIN);
         when(userRepository.findByUsername("user@test.com")).thenReturn(user);
 
         UserDetails result = authorizationService.loadUserByUsername("user@test.com");

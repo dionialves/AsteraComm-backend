@@ -59,7 +59,7 @@ public class UserService {
                 dto.name(),
                 dto.username(),
                 passwordEncoder.encode(dto.password()),
-                dto.role());
+                UserRole.ADMIN);
 
         User saved = userRepository.save(user);
         return new UserResponseDTO(saved);
