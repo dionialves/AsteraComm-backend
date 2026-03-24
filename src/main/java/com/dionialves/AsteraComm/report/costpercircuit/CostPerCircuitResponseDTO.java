@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.report;
+package com.dionialves.AsteraComm.report.costpercircuit;
 
 import java.util.List;
 

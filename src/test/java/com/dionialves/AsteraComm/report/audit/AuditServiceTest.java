@@ -1,5 +1,9 @@
-package com.dionialves.AsteraComm.call;
+package com.dionialves.AsteraComm.report.audit;
 
+import com.dionialves.AsteraComm.call.Call;
+import com.dionialves.AsteraComm.call.CallRepository;
+import com.dionialves.AsteraComm.call.CallStatus;
+import com.dionialves.AsteraComm.call.CallType;
 import com.dionialves.AsteraComm.circuit.Circuit;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.exception.NotFoundException;

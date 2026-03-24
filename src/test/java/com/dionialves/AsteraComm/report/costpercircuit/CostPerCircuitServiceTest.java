@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.report;
+package com.dionialves.AsteraComm.report.costpercircuit;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,13 +13,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CallReportServiceTest {
+class CostPerCircuitServiceTest {
 
     @Mock
-    private CallReportRepository callReportRepository;
+    private CostPerCircuitRepository costPerCircuitRepository;
 
     @InjectMocks
-    private CallReportService callReportService;
+    private CostPerCircuitService costPerCircuitService;
 
     private CallCostReportRow buildRow(String circuitNumber, String customerName,
                                        long callCount, long totalBillSeconds,
@@ -35,20 +35,20 @@ class CallReportServiceTest {
     void getReport_returnsAllCircuits_whenOnlyWithCostIsFalse() {
         CallCostReportRow rowA = buildRow("1001", "Cliente X", 5, 600, new BigDecimal("1.50"));
         CallCostReportRow rowB = buildRow("1002", "Cliente Y", 3, 180, BigDecimal.ZERO);
-        when(callReportRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowA, rowB));
+        when(costPerCircuitRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowA, rowB));
 
-        List<CallCostReportDTO> result = callReportService.getReport(3, 2026, false);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(3, 2026, false);
 
         assertThat(result).hasSize(2);
-        verify(callReportRepository).findCallCostByPeriod(3, 2026);
+        verify(costPerCircuitRepository).findCallCostByPeriod(3, 2026);
     }
 
     @Test
     void getReport_mapsRowToDTO_correctly() {
         CallCostReportRow row = buildRow("1001", "Cliente X", 5, 600, new BigDecimal("1.50"));
-        when(callReportRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(row));
+        when(costPerCircuitRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(row));
 
-        List<CallCostReportDTO> result = callReportService.getReport(3, 2026, false);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(3, 2026, false);
 
         CallCostReportDTO dto = result.get(0);
         assertThat(dto.customerName()).isEqualTo("Cliente X");
@@ -60,9 +60,9 @@ class CallReportServiceTest {
 
     @Test
     void getReport_returnsEmptyList_whenNoCallsInPeriod() {
-        when(callReportRepository.findCallCostByPeriod(1, 2026)).thenReturn(List.of());
+        when(costPerCircuitRepository.findCallCostByPeriod(1, 2026)).thenReturn(List.of());
 
-        List<CallCostReportDTO> result = callReportService.getReport(1, 2026, false);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(1, 2026, false);
 
         assertThat(result).isEmpty();
     }
@@ -71,9 +71,9 @@ class CallReportServiceTest {
     void getReport_returnsMultipleCircuits_withDistinctCosts() {
         CallCostReportRow rowA = buildRow("1001", "Cliente X", 10, 1800, new BigDecimal("4.50"));
         CallCostReportRow rowB = buildRow("1002", "Cliente Y",  2,  120, new BigDecimal("0.27"));
-        when(callReportRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowA, rowB));
+        when(costPerCircuitRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowA, rowB));
 
-        List<CallCostReportDTO> result = callReportService.getReport(3, 2026, false);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(3, 2026, false);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).totalCost()).isEqualByComparingTo(new BigDecimal("4.50"));
@@ -88,9 +88,9 @@ class CallReportServiceTest {
     void getReport_excludesZeroCostCircuits_whenOnlyWithCostIsTrue() {
         CallCostReportRow rowWithCost    = buildRow("1001", "Cliente X", 5, 600, new BigDecimal("1.50"));
         CallCostReportRow rowWithoutCost = buildRow("1002", "Cliente Y", 3, 180, BigDecimal.ZERO);
-        when(callReportRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowWithCost, rowWithoutCost));
+        when(costPerCircuitRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowWithCost, rowWithoutCost));
 
-        List<CallCostReportDTO> result = callReportService.getReport(3, 2026, true);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(3, 2026, true);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).circuitName()).isEqualTo("1001");
@@ -100,9 +100,9 @@ class CallReportServiceTest {
     void getReport_returnsAll_whenOnlyWithCostIsTrueAndAllHaveCost() {
         CallCostReportRow rowA = buildRow("1001", "Cliente X", 5, 600, new BigDecimal("1.50"));
         CallCostReportRow rowB = buildRow("1002", "Cliente Y", 2, 120, new BigDecimal("0.27"));
-        when(callReportRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowA, rowB));
+        when(costPerCircuitRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(rowA, rowB));
 
-        List<CallCostReportDTO> result = callReportService.getReport(3, 2026, true);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(3, 2026, true);
 
         assertThat(result).hasSize(2);
     }
@@ -110,9 +110,9 @@ class CallReportServiceTest {
     @Test
     void getReport_returnsEmpty_whenOnlyWithCostIsTrueAndNoneHaveCost() {
         CallCostReportRow row = buildRow("1001", "Cliente X", 3, 180, BigDecimal.ZERO);
-        when(callReportRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(row));
+        when(costPerCircuitRepository.findCallCostByPeriod(3, 2026)).thenReturn(List.of(row));
 
-        List<CallCostReportDTO> result = callReportService.getReport(3, 2026, true);
+        List<CallCostReportDTO> result = costPerCircuitService.getReport(3, 2026, true);
 
         assertThat(result).isEmpty();
     }

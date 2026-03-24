@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.report;
+package com.dionialves.AsteraComm.report.costpercircuit;
 
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,19 +18,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-class CallReportControllerTest {
+class CostPerCircuitControllerTest {
 
     private MockMvc mockMvc;
 
     @Mock
-    private CallReportService callReportService;
+    private CostPerCircuitService costPerCircuitService;
 
     @InjectMocks
-    private CallReportController callReportController;
+    private CostPerCircuitController costPerCircuitController;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(callReportController)
+        mockMvc = MockMvcBuilders.standaloneSetup(costPerCircuitController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -40,7 +40,7 @@ class CallReportControllerTest {
         List<CallCostReportDTO> data = List.of(
                 new CallCostReportDTO("Cliente X", "Circuito A", 5, 10, new BigDecimal("1.50"))
         );
-        when(callReportService.getReport(3, 2026, false)).thenReturn(data);
+        when(costPerCircuitService.getReport(3, 2026, false)).thenReturn(data);
 
         mockMvc.perform(get("/api/reports/call-cost")
                         .param("month", "3")
@@ -55,7 +55,7 @@ class CallReportControllerTest {
 
     @Test
     void getCallCostReport_shouldReturn200_withOnlyWithCostTrue() throws Exception {
-        when(callReportService.getReport(3, 2026, true)).thenReturn(List.of());
+        when(costPerCircuitService.getReport(3, 2026, true)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/reports/call-cost")
                         .param("month", "3")
@@ -63,12 +63,12 @@ class CallReportControllerTest {
                         .param("onlyWithCost", "true"))
                 .andExpect(status().isOk());
 
-        verify(callReportService).getReport(3, 2026, true);
+        verify(costPerCircuitService).getReport(3, 2026, true);
     }
 
     @Test
     void getCallCostReport_shouldReturn200_withEmptyResult() throws Exception {
-        when(callReportService.getReport(1, 2026, false)).thenReturn(List.of());
+        when(costPerCircuitService.getReport(1, 2026, false)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/reports/call-cost")
                         .param("month", "1")

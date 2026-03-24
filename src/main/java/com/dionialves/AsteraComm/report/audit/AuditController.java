@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.call;
+package com.dionialves.AsteraComm.report.audit;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

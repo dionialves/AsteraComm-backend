@@ -1,4 +1,6 @@
-package com.dionialves.AsteraComm.call;
+package com.dionialves.AsteraComm.report.audit;
+
+import com.dionialves.AsteraComm.call.CallType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

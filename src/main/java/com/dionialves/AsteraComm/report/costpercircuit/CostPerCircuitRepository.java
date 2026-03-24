@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.report;
+package com.dionialves.AsteraComm.report.costpercircuit;
 
 import com.dionialves.AsteraComm.call.Call;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,10 +7,10 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface CallReportRepository extends JpaRepository<Call, Long> {
+public interface CostPerCircuitRepository extends JpaRepository<Call, Long> {
 
     @Query("""
-            SELECT new com.dionialves.AsteraComm.report.CallCostReportRow(
+            SELECT new com.dionialves.AsteraComm.report.costpercircuit.CallCostReportRow(
                 c.number,
                 cu.name,
                 COUNT(ca.id),

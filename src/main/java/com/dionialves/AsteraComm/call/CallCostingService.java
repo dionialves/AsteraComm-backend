@@ -121,7 +121,7 @@ public class CallCostingService {
         };
     }
 
-    static BigDecimal calculateFractionCost(int seconds, BigDecimal ratePerMinute) {
+    public static BigDecimal calculateFractionCost(int seconds, BigDecimal ratePerMinute) {
         if (seconds <= 0) {
             return BigDecimal.ZERO.setScale(3, RoundingMode.UNNECESSARY);
         }

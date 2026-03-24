@@ -1,4 +1,4 @@
-package com.dionialves.AsteraComm.report;
+package com.dionialves.AsteraComm.report.costpercircuit;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
@@ -20,12 +20,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Service
-public class CallReportService {
+public class CostPerCircuitService {
 
-    private final CallReportRepository callReportRepository;
+    private final CostPerCircuitRepository costPerCircuitRepository;
 
     public List<CallCostReportDTO> getReport(int month, int year, boolean onlyWithCost) {
-        return callReportRepository.findCallCostByPeriod(month, year).stream()
+        return costPerCircuitRepository.findCallCostByPeriod(month, year).stream()
                 .filter(row -> !onlyWithCost || row.totalCost().compareTo(BigDecimal.ZERO) > 0)
                 .map(row -> new CallCostReportDTO(
                         row.customerName(),
