@@ -122,4 +122,31 @@ public interface CallRepository extends JpaRepository<Call, Long>,
             ORDER BY used_minutes DESC
             """, nativeQuery = true)
     List<Object[]> findCircuitConsumption(@Param("month") int month, @Param("year") int year);
+
+    @Query(value = """
+            SELECT
+                c.number                   AS circuit_number,
+                cu.name                    AS customer_name,
+                p.name                     AS plan_name,
+                p.package_fixed_local,
+                p.package_fixed_long_distance,
+                p.package_mobile_local,
+                p.package_mobile_long_distance,
+                COALESCE(SUM(CASE WHEN ca.call_type = 'FIXED_LOCAL'          THEN ca.minutes_from_quota ELSE 0 END), 0)::bigint AS used_fixed_local,
+                COALESCE(SUM(CASE WHEN ca.call_type = 'FIXED_LONG_DISTANCE'  THEN ca.minutes_from_quota ELSE 0 END), 0)::bigint AS used_fixed_ld,
+                COALESCE(SUM(CASE WHEN ca.call_type = 'MOBILE_LOCAL'         THEN ca.minutes_from_quota ELSE 0 END), 0)::bigint AS used_mobile_local,
+                COALESCE(SUM(CASE WHEN ca.call_type = 'MOBILE_LONG_DISTANCE' THEN ca.minutes_from_quota ELSE 0 END), 0)::bigint AS used_mobile_ld
+            FROM asteracomm_circuits c
+            JOIN asteracomm_customers cu ON cu.id = c.customer_id
+            JOIN asteracomm_plans p ON p.id = c.plan_id
+            LEFT JOIN asteracomm_calls ca ON ca.circuit_number = c.number
+                AND ca.call_status = 'PROCESSED'
+                AND EXTRACT(MONTH FROM ca.call_date) = :month
+                AND EXTRACT(YEAR  FROM ca.call_date) = :year
+            WHERE p.package_type = 'PER_CATEGORY'
+            GROUP BY c.number, cu.name, p.name,
+                p.package_fixed_local, p.package_fixed_long_distance,
+                p.package_mobile_local, p.package_mobile_long_distance
+            """, nativeQuery = true)
+    List<Object[]> findPerCategoryCircuitConsumption(@Param("month") int month, @Param("year") int year);
 }

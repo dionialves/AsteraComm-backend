@@ -320,8 +320,92 @@ class DashboardServiceTest {
         assertThat(result.circuitOverage().withinLimit()).isEqualTo(0);
     }
 
+    // -------------------------------------------------------------------------
+    // PER_CATEGORY circuits — gráfico de consumo próximo ao limite
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getDashboard_nearLimitCircuits_includesPerCategoryCircuit() {
+        stubCircuits(1L, 1L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        100, null, null, null,
+                        80L, 0L, 0L, 0L) // fixo local 80% — próximo do limite
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        assertThat(result.nearLimitCircuits()).hasSize(1);
+        assertThat(result.nearLimitCircuits().get(0).circuit()).isEqualTo("2001");
+        assertThat(result.nearLimitCircuits().get(0).percent()).isEqualTo(80.0);
+    }
+
+    @Test
+    void getDashboard_nearLimitCircuits_perCategoryShowsMostCriticalCategory() {
+        stubCircuits(1L, 1L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        100, 100, 100, 100,
+                        50L, 90L, 30L, 60L) // fixo LD = 90% é a mais crítica
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        assertThat(result.nearLimitCircuits()).hasSize(1);
+        DashboardDTO.CircuitConsumption c = result.nearLimitCircuits().get(0);
+        assertThat(c.percent()).isEqualTo(90.0);
+        assertThat(c.planName()).contains("Fixo LD");
+        assertThat(c.usedMinutes()).isEqualTo(90L);
+        assertThat(c.limitMinutes()).isEqualTo(100L);
+    }
+
+    @Test
+    void getDashboard_circuitOverage_countsPerCategoryExceededCircuit() {
+        stubCircuits(1L, 1L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        100, null, null, null,
+                        110L, 0L, 0L, 0L) // 110% — excedido
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        assertThat(result.circuitOverage().exceeded()).isEqualTo(1);
+        assertThat(result.circuitOverage().withinLimit()).isEqualTo(0);
+    }
+
+    @Test
+    void getDashboard_nearLimitCircuits_perCategoryPlanNameIncludesCategoryLabel() {
+        stubCircuits(1L, 1L);
+        stubTrunks(0L, 0L);
+        stubCalls(0L, 0L, 0L, 0L, 0L, BigDecimal.ZERO, BigDecimal.ZERO);
+        when(callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear)).thenReturn(List.<Object[]>of(
+                perCategoryRow("2001", "Cliente C", "Plano Z",
+                        null, null, 100, null, // apenas móvel local tem limite
+                        0L, 0L, 70L, 0L)
+        ));
+
+        DashboardDTO result = dashboardService.getDashboard();
+
+        assertThat(result.nearLimitCircuits().get(0).planName()).isEqualTo("Plano Z — Móvel Local");
+    }
+
     private Object[] consumptionRow(String circuit, String customer, String plan, long used, long limit) {
         return new Object[] { circuit, customer, plan, used, limit };
+    }
+
+    private Object[] perCategoryRow(String circuit, String customer, String plan,
+            Integer limitFixedLocal, Integer limitFixedLd, Integer limitMobileLocal, Integer limitMobileLd,
+            long usedFixedLocal, long usedFixedLd, long usedMobileLocal, long usedMobileLd) {
+        return new Object[] { circuit, customer, plan,
+                limitFixedLocal, limitFixedLd, limitMobileLocal, limitMobileLd,
+                usedFixedLocal, usedFixedLd, usedMobileLocal, usedMobileLd };
     }
 
     private void stubCircuits(long total, long online) {

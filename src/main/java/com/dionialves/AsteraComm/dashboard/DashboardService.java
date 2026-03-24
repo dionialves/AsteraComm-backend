@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class DashboardService {
@@ -67,8 +68,14 @@ public class DashboardService {
 
         // Circuit consumption — current month
         List<Object[]> consumptionRaw = callRepository.findCircuitConsumption(currentMonth, currentYear);
-        List<DashboardDTO.CircuitConsumption> allConsumption = consumptionRaw.stream()
-                .map(this::toCircuitConsumption)
+        List<Object[]> perCategoryRaw = callRepository.findPerCategoryCircuitConsumption(currentMonth, currentYear);
+
+        List<DashboardDTO.CircuitConsumption> allConsumption = Stream.concat(
+                consumptionRaw.stream().map(this::toCircuitConsumption),
+                perCategoryRaw.stream()
+                        .map(this::toPerCategoryConsumption)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get))
                 .collect(Collectors.toList());
 
         long exceeded = allConsumption.stream().filter(c -> c.percent() >= 100.0).count();
@@ -160,5 +167,45 @@ public class DashboardService {
         long limitMinutes = ((Number) row[4]).longValue();
         double percent = limitMinutes > 0 ? (usedMinutes * 100.0) / limitMinutes : 0.0;
         return new DashboardDTO.CircuitConsumption(circuit, customerName, planName, usedMinutes, limitMinutes, percent);
+    }
+
+    private static final Map<String, String> CATEGORY_LABELS = Map.of(
+            "FIXED_LOCAL",          "Fixo Local",
+            "FIXED_LONG_DISTANCE",  "Fixo LD",
+            "MOBILE_LOCAL",         "Móvel Local",
+            "MOBILE_LONG_DISTANCE", "Móvel LD"
+    );
+
+    private Optional<DashboardDTO.CircuitConsumption> toPerCategoryConsumption(Object[] row) {
+        String circuit      = (String) row[0];
+        String customerName = (String) row[1];
+        String planName     = (String) row[2];
+        Integer limitFixedLocal  = row[3]  != null ? ((Number) row[3]).intValue()  : null;
+        Integer limitFixedLd     = row[4]  != null ? ((Number) row[4]).intValue()  : null;
+        Integer limitMobileLocal = row[5]  != null ? ((Number) row[5]).intValue()  : null;
+        Integer limitMobileLd    = row[6]  != null ? ((Number) row[6]).intValue()  : null;
+        long usedFixedLocal  = ((Number) row[7]).longValue();
+        long usedFixedLd     = ((Number) row[8]).longValue();
+        long usedMobileLocal = ((Number) row[9]).longValue();
+        long usedMobileLd    = ((Number) row[10]).longValue();
+
+        record Cat(String key, long used, long limit) {}
+        List<Cat> cats = new ArrayList<>();
+        if (limitFixedLocal  != null && limitFixedLocal  > 0) cats.add(new Cat("FIXED_LOCAL",         usedFixedLocal,  limitFixedLocal));
+        if (limitFixedLd     != null && limitFixedLd     > 0) cats.add(new Cat("FIXED_LONG_DISTANCE", usedFixedLd,     limitFixedLd));
+        if (limitMobileLocal != null && limitMobileLocal > 0) cats.add(new Cat("MOBILE_LOCAL",        usedMobileLocal, limitMobileLocal));
+        if (limitMobileLd    != null && limitMobileLd    > 0) cats.add(new Cat("MOBILE_LONG_DISTANCE",usedMobileLd,    limitMobileLd));
+
+        if (cats.isEmpty()) return Optional.empty();
+
+        Cat worst = cats.stream()
+                .max(Comparator.comparingDouble(c -> (c.used() * 100.0) / c.limit()))
+                .orElseThrow();
+
+        double percent = (worst.used() * 100.0) / worst.limit();
+        String label = CATEGORY_LABELS.getOrDefault(worst.key(), worst.key());
+        return Optional.of(new DashboardDTO.CircuitConsumption(
+                circuit, customerName, planName + " — " + label,
+                worst.used(), worst.limit(), percent));
     }
 }
