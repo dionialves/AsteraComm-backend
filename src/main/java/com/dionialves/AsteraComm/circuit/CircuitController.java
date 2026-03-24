@@ -1,7 +1,6 @@
 package com.dionialves.AsteraComm.circuit;
 
 import com.dionialves.AsteraComm.circuit.dto.CircuitCreateDTO;
-import com.dionialves.AsteraComm.circuit.dto.CircuitSummaryDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +18,8 @@ public class CircuitController {
     private final CircuitService circuitService;
 
     @GetMapping("/summary")
-    public CircuitSummaryDTO getSummary() {
-        return circuitService.getSummary();
+    public ResponseEntity<?> findAllSummary() {
+        return ResponseEntity.ok(circuitService.findAllSummary());
     }
 
     @GetMapping
@@ -31,7 +30,7 @@ public class CircuitController {
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         Boolean active = "ACTIVE".equalsIgnoreCase(status) ? Boolean.TRUE
                 : "INACTIVE".equalsIgnoreCase(status) ? Boolean.FALSE
-                : null;
+                        : null;
         return circuitService.getAll(search, online, active, pageable);
     }
 

@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.trunk;
 import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningService;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
+import com.dionialves.AsteraComm.trunk.dto.TrunkSummaryDTO;
 import com.dionialves.AsteraComm.trunk.dto.TrunkCreateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -157,5 +158,28 @@ class TrunkServiceTest {
         assertThatThrownBy(() -> trunkService.delete("inexistente"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Tronco não encontrado");
+    }
+
+    // --- findAll ---
+
+    @Test
+    void findAll_shouldDelegateToRepository() {
+        var summaries = List.of(new TrunkSummaryDTO("provedor1"));
+        when(trunkRepository.findAllSummary()).thenReturn(summaries);
+
+        List<TrunkSummaryDTO> result = trunkService.findAllSummary();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).name()).isEqualTo("provedor1");
+        verify(trunkRepository).findAllSummary();
+    }
+
+    @Test
+    void findAll_shouldReturnEmptyList_whenNoTrunks() {
+        when(trunkRepository.findAllSummary()).thenReturn(List.of());
+
+        List<TrunkSummaryDTO> result = trunkService.findAllSummary();
+
+        assertThat(result).isEmpty();
     }
 }

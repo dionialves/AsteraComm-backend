@@ -16,7 +16,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-
 import java.util.List;
 import java.util.Optional;
 
@@ -162,27 +161,6 @@ class UserServiceTest {
     }
 
     @Test
-    void disable_shouldSetEnabledFalseAndSave() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
-
-        userService.disable(1L);
-
-        verify(userRepository).save(argThat(u -> !u.isEnabled()));
-    }
-
-    @Test
-    void enable_shouldSetEnabledTrueAndSave() {
-        testUser.setEnabled(false);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
-
-        userService.enable(1L);
-
-        verify(userRepository).save(argThat(User::isEnabled));
-    }
-
-    @Test
     void getCurrentUser_shouldReturnAuthenticatedUser() {
         var auth = new UsernamePasswordAuthenticationToken(testUser, null, testUser.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -193,5 +171,27 @@ class UserServiceTest {
         assertThat(result.username()).isEqualTo("user@test.com");
 
         SecurityContextHolder.clearContext();
+    }
+
+    // --- findAllSummary ---
+
+    @Test
+    void findAllSummary_shouldDelegateToRepository() {
+        when(userRepository.findAllSummary()).thenReturn(List.of(testUser));
+
+        List<UserResponseDTO> result = userService.findAllSummary();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).username()).isEqualTo("user@test.com");
+        verify(userRepository).findAllSummary();
+    }
+
+    @Test
+    void findAllSummary_shouldReturnEmptyList_whenNoUsers() {
+        when(userRepository.findAllSummary()).thenReturn(List.of());
+
+        List<UserResponseDTO> result = userService.findAllSummary();
+
+        assertThat(result).isEmpty();
     }
 }

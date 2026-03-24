@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.plan;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import com.dionialves.AsteraComm.plan.dto.PlanCreateDTO;
+import com.dionialves.AsteraComm.plan.dto.PlanSummaryDTO;
 import com.dionialves.AsteraComm.plan.dto.PlanUpdateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -358,5 +359,28 @@ class PlanServiceTest {
         assertThatThrownBy(() -> planService.delete(99L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Plano não encontrado");
+    }
+
+    // --- findAllSummary ---
+
+    @Test
+    void findAllSummary_shouldDelegateToRepository() {
+        var summaries = List.of(new PlanSummaryDTO(1L, "Plano Básico"));
+        when(planRepository.findAllSummary()).thenReturn(summaries);
+
+        List<PlanSummaryDTO> result = planService.findAllSummary();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).name()).isEqualTo("Plano Básico");
+        verify(planRepository).findAllSummary();
+    }
+
+    @Test
+    void findAllSummary_shouldReturnEmptyList_whenNoActivePlans() {
+        when(planRepository.findAllSummary()).thenReturn(List.of());
+
+        List<PlanSummaryDTO> result = planService.findAllSummary();
+
+        assertThat(result).isEmpty();
     }
 }

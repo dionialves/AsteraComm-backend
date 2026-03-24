@@ -1,6 +1,7 @@
 package com.dionialves.AsteraComm.trunk;
 
 import com.dionialves.AsteraComm.trunk.dto.TrunkCreateDTO;
+import com.dionialves.AsteraComm.trunk.dto.TrunkSummaryDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -21,6 +24,11 @@ public class TrunkController {
             @RequestParam(required = false, defaultValue = "") String search,
             @PageableDefault(size = 10, sort = "name") Pageable pageable) {
         return trunkService.getAll(search, pageable);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<?> findAllSummary() {
+        return ResponseEntity.ok(trunkService.findAllSummary());
     }
 
     @GetMapping("/{name}")

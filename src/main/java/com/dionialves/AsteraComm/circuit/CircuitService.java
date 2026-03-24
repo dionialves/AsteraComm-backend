@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -34,13 +35,8 @@ public class CircuitService {
         return circuitRepository.findAllCircuits(search, online, active, pageable);
     }
 
-    public CircuitSummaryDTO getSummary() {
-        return new CircuitSummaryDTO(
-                circuitRepository.countAll(),
-                circuitRepository.countActive(),
-                circuitRepository.countOnline(),
-                circuitRepository.countInactive()
-        );
+    public List<CircuitSummaryDTO> findAllSummary() {
+        return circuitRepository.findAllSummary();
     }
 
     public Optional<Circuit> findByNumber(String number) {
@@ -84,7 +80,8 @@ public class CircuitService {
         circuit.setTrunkName(dto.trunkName());
         circuit.setCustomer(customer);
         circuit.setPlan(resolvePlan(dto.planId()));
-        if (dto.active() != null) circuit.setActive(dto.active());
+        if (dto.active() != null)
+            circuit.setActive(dto.active());
         Circuit saved = circuitRepository.save(circuit);
 
         asteriskProvisioningService.reprovision(saved, previousTrunkName);
@@ -112,7 +109,8 @@ public class CircuitService {
     }
 
     private Plan resolvePlan(Long planId) {
-        if (planId == null) throw new BusinessException("Plano é obrigatório para o circuito");
+        if (planId == null)
+            throw new BusinessException("Plano é obrigatório para o circuito");
         return planRepository.findById(planId)
                 .orElseThrow(() -> new NotFoundException("Plano não encontrado"));
     }

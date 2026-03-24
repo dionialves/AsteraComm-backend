@@ -4,6 +4,7 @@ import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import com.dionialves.AsteraComm.trunk.dto.TrunkCreateDTO;
+import com.dionialves.AsteraComm.trunk.dto.TrunkSummaryDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -98,8 +99,9 @@ class TrunkControllerTest {
         when(trunkService.create(any(TrunkCreateDTO.class))).thenReturn(testTrunk);
 
         mockMvc.perform(post("/api/trunks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"provedor1\",\"host\":\"sip.provedor1.com.br\",\"username\":\"user123\",\"password\":\"senha123\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        "{\"name\":\"provedor1\",\"host\":\"sip.provedor1.com.br\",\"username\":\"user123\",\"password\":\"senha123\"}"))
                 .andExpect(status().isCreated());
     }
 
@@ -109,8 +111,9 @@ class TrunkControllerTest {
                 .thenThrow(new BusinessException("Tronco já existe"));
 
         mockMvc.perform(post("/api/trunks")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"provedor1\",\"host\":\"sip.provedor1.com.br\",\"username\":\"user123\",\"password\":\"senha123\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        "{\"name\":\"provedor1\",\"host\":\"sip.provedor1.com.br\",\"username\":\"user123\",\"password\":\"senha123\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -119,8 +122,9 @@ class TrunkControllerTest {
         when(trunkService.update(eq("provedor1"), any(TrunkCreateDTO.class))).thenReturn(testTrunk);
 
         mockMvc.perform(put("/api/trunks/provedor1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"provedor1\",\"host\":\"novo.host.com\",\"username\":\"user123\",\"password\":\"novasenha\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        "{\"name\":\"provedor1\",\"host\":\"novo.host.com\",\"username\":\"user123\",\"password\":\"novasenha\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -130,8 +134,9 @@ class TrunkControllerTest {
                 .thenThrow(new NotFoundException("Tronco não encontrado"));
 
         mockMvc.perform(put("/api/trunks/inexistente")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"inexistente\",\"host\":\"host.com\",\"username\":\"user\",\"password\":\"pass\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                        "{\"name\":\"inexistente\",\"host\":\"host.com\",\"username\":\"user\",\"password\":\"pass\"}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -150,5 +155,28 @@ class TrunkControllerTest {
 
         mockMvc.perform(delete("/api/trunks/inexistente"))
                 .andExpect(status().isNotFound());
+    }
+
+    // --- GET /api/trunks/all ---
+
+    @Test
+    void getAll_shouldReturn200_withArray() throws Exception {
+        var summaries = List.of(new TrunkSummaryDTO("provedor1"));
+        when(trunkService.findAllSummary()).thenReturn(summaries);
+
+        mockMvc.perform(get("/api/trunks/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].name").value("provedor1"));
+    }
+
+    @Test
+    void getAll_shouldReturn200_withEmptyArray_whenNoTrunks() throws Exception {
+        when(trunkService.findAllSummary()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/trunks/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }

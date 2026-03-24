@@ -1,5 +1,6 @@
 package com.dionialves.AsteraComm.circuit;
 
+import com.dionialves.AsteraComm.circuit.dto.CircuitSummaryDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CircuitRepository extends JpaRepository<Circuit, Long> {
+
+    @Query("SELECT new com.dionialves.AsteraComm.circuit.dto.CircuitSummaryDTO(c.number, cu.name) FROM Circuit c JOIN c.customer cu WHERE c.active = true ORDER BY c.number")
+    List<CircuitSummaryDTO> findAllSummary();
 
     Optional<Circuit> findByNumber(String number);
 

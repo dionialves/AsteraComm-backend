@@ -2,6 +2,7 @@ package com.dionialves.AsteraComm.customer;
 
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
 import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerSummaryDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
@@ -142,8 +143,8 @@ class CustomerControllerTest {
         when(customerService.create(any(CustomerCreateDTO.class))).thenReturn(testCustomer);
 
         mockMvc.perform(post("/api/customers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Acme Corp\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Acme Corp\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Acme Corp"));
     }
@@ -153,8 +154,8 @@ class CustomerControllerTest {
         when(customerService.update(eq(1L), any(CustomerCreateDTO.class))).thenReturn(testCustomer);
 
         mockMvc.perform(put("/api/customers/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Updated Name\",\"enabled\":true}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Updated Name\",\"enabled\":true}"))
                 .andExpect(status().isOk());
     }
 
@@ -164,8 +165,8 @@ class CustomerControllerTest {
                 .thenThrow(new NotFoundException("Cliente não encontrado"));
 
         mockMvc.perform(put("/api/customers/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"X\",\"enabled\":true}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"X\",\"enabled\":true}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -210,5 +211,29 @@ class CustomerControllerTest {
 
         mockMvc.perform(patch("/api/customers/99/disable"))
                 .andExpect(status().isNotFound());
+    }
+
+    // --- GET /api/customers/all ---
+
+    @Test
+    void getAllEnabled_shouldReturn200_withArray() throws Exception {
+        var summaries = List.of(new CustomerSummaryDTO(1L, "Empresa Alpha"));
+        when(customerService.findAllSummary()).thenReturn(summaries);
+
+        mockMvc.perform(get("/api/customers/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].name").value("Empresa Alpha"));
+    }
+
+    @Test
+    void getAllEnabled_shouldReturn200_withEmptyArray_whenNoEnabledCustomers() throws Exception {
+        when(customerService.findAllSummary()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/customers/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }

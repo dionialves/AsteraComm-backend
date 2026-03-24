@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.customer;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
 import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerSummaryDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -38,6 +40,10 @@ public class CustomerService {
     private CustomerResponseDTO toResponseDTO(Customer c) {
         int count = (int) circuitRepository.countByCustomerId(c.getId());
         return new CustomerResponseDTO(c.getId(), c.getName(), c.isEnabled(), count, c.getCreatedAt(), c.getUpdatedAt());
+    }
+
+    public List<CustomerSummaryDTO> findAllSummary() {
+        return customerRepository.findAllSummary();
     }
 
     public Optional<Customer> findById(Long id) {

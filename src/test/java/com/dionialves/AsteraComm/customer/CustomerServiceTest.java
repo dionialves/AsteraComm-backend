@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.customer;
 import com.dionialves.AsteraComm.circuit.CircuitRepository;
 import com.dionialves.AsteraComm.customer.dto.CustomerCreateDTO;
 import com.dionialves.AsteraComm.customer.dto.CustomerResponseDTO;
+import com.dionialves.AsteraComm.customer.dto.CustomerSummaryDTO;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -263,5 +264,28 @@ class CustomerServiceTest {
         assertThatThrownBy(() -> customerService.disable(99L))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Cliente não encontrado");
+    }
+
+    // --- findAllSummary ---
+
+    @Test
+    void findAllSummary_shouldDelegateToRepository() {
+        var summaries = List.of(new CustomerSummaryDTO(1L, "Empresa Alpha"));
+        when(customerRepository.findAllSummary()).thenReturn(summaries);
+
+        List<CustomerSummaryDTO> result = customerService.findAllSummary();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).name()).isEqualTo("Empresa Alpha");
+        verify(customerRepository).findAllSummary();
+    }
+
+    @Test
+    void findAllSummary_shouldReturnEmptyList_whenNoEnabledCustomers() {
+        when(customerRepository.findAllSummary()).thenReturn(List.of());
+
+        List<CustomerSummaryDTO> result = customerService.findAllSummary();
+
+        assertThat(result).isEmpty();
     }
 }

@@ -31,6 +31,11 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/summary")
+    public ResponseEntity<?> findAllSummary() {
+        return ResponseEntity.ok(userService.findAllSummary());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.findById(id));

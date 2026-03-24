@@ -115,8 +115,7 @@ class CircuitServiceTest {
 
         circuitService.create(dto);
 
-        verify(circuitRepository).save(argThat(c ->
-                c.getNumber().equals("100000")
+        verify(circuitRepository).save(argThat(c -> c.getNumber().equals("100000")
                 && c.getPassword().equals("mypassword")
                 && c.getTrunkName().equals("opasuite")
                 && c.getCustomer().getId().equals(1L)));
@@ -350,23 +349,6 @@ class CircuitServiceTest {
         verify(circuitRepository, never()).delete(any());
     }
 
-    // === Novos testes US-041 — summary e filtros de listagem ===
-
-    @Test
-    void getSummary_shouldReturnCorrectCounts() {
-        when(circuitRepository.countAll()).thenReturn(10L);
-        when(circuitRepository.countActive()).thenReturn(7L);
-        when(circuitRepository.countOnline()).thenReturn(5L);
-        when(circuitRepository.countInactive()).thenReturn(3L);
-
-        CircuitSummaryDTO summary = circuitService.getSummary();
-
-        assertThat(summary.total()).isEqualTo(10L);
-        assertThat(summary.active()).isEqualTo(7L);
-        assertThat(summary.online()).isEqualTo(5L);
-        assertThat(summary.inactive()).isEqualTo(3L);
-    }
-
     @Test
     void getAll_withOnlineTrue_shouldPassFilterToRepository() {
         Page<CircuitProjection> page = new PageImpl<>(List.of());
@@ -404,5 +386,29 @@ class CircuitServiceTest {
         assertThatThrownBy(() -> circuitService.delete("999999"))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Circuito não encontrado");
+    }
+
+    // --- findAllSummary ---
+
+    @Test
+    void findAllSummary_shouldDelegateToRepository() {
+        var summaries = List.of(new CircuitSummaryDTO("100001", "Empresa Alpha"));
+        when(circuitRepository.findAllSummary()).thenReturn(summaries);
+
+        List<CircuitSummaryDTO> result = circuitService.findAllSummary();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).number()).isEqualTo("100001");
+        assertThat(result.get(0).customerName()).isEqualTo("Empresa Alpha");
+        verify(circuitRepository).findAllSummary();
+    }
+
+    @Test
+    void findAllSummary_shouldReturnEmptyList_whenNoCircuits() {
+        when(circuitRepository.findAllSummary()).thenReturn(List.of());
+
+        List<CircuitSummaryDTO> result = circuitService.findAllSummary();
+
+        assertThat(result).isEmpty();
     }
 }

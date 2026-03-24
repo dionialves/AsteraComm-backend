@@ -4,12 +4,14 @@ import com.dionialves.AsteraComm.asterisk.provisioning.AsteriskProvisioningServi
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import com.dionialves.AsteraComm.trunk.dto.TrunkCreateDTO;
+import com.dionialves.AsteraComm.trunk.dto.TrunkSummaryDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -22,6 +24,10 @@ public class TrunkService {
 
     public Page<TrunkProjection> getAll(String search, Pageable pageable) {
         return trunkRepository.findAllTrunks(search, pageable);
+    }
+
+    public List<TrunkSummaryDTO> findAllSummary() {
+        return trunkRepository.findAllSummary();
     }
 
     public Optional<Trunk> findByName(String name) {

@@ -4,6 +4,7 @@ import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.GlobalExceptionHandler;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import com.dionialves.AsteraComm.plan.dto.PlanCreateDTO;
+import com.dionialves.AsteraComm.plan.dto.PlanSummaryDTO;
 import com.dionialves.AsteraComm.plan.dto.PlanUpdateDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -143,8 +144,8 @@ class PlanControllerTest {
         when(planService.update(eq(1L), any(PlanUpdateDTO.class))).thenReturn(testPlan);
 
         mockMvc.perform(put("/api/plans/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\": false}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
     }
@@ -176,8 +177,8 @@ class PlanControllerTest {
         when(planService.create(any(PlanCreateDTO.class))).thenReturn(testPlan);
 
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(VALID_NONE_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(VALID_NONE_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Plano Básico"));
     }
@@ -192,8 +193,8 @@ class PlanControllerTest {
         when(planService.create(any(PlanCreateDTO.class))).thenReturn(unifiedPlan);
 
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(VALID_UNIFIED_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(VALID_UNIFIED_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.packageTotalMinutes").value(400));
     }
@@ -208,8 +209,8 @@ class PlanControllerTest {
         when(planService.create(any(PlanCreateDTO.class))).thenReturn(perCatPlan);
 
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(VALID_PER_CATEGORY_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(VALID_PER_CATEGORY_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.packageFixedLocal").value(200));
     }
@@ -220,26 +221,26 @@ class PlanControllerTest {
                 .thenThrow(new BusinessException("Plano já cadastrado"));
 
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(VALID_NONE_JSON))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(VALID_NONE_JSON))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void create_shouldReturn400_whenPackageTypeIsInvalid() throws Exception {
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Plano X",
-                                  "monthlyPrice": 99.90,
-                                  "fixedLocal": 0.09,
-                                  "fixedLongDistance": 0.21,
-                                  "mobileLocal": 0.45,
-                                  "mobileLongDistance": 0.55,
-                                  "packageType": "INVALID"
-                                }
-                                """))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "name": "Plano X",
+                          "monthlyPrice": 99.90,
+                          "fixedLocal": 0.09,
+                          "fixedLongDistance": 0.21,
+                          "mobileLocal": 0.45,
+                          "mobileLongDistance": 0.55,
+                          "packageType": "INVALID"
+                        }
+                        """))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(planService);
@@ -248,8 +249,8 @@ class PlanControllerTest {
     @Test
     void create_shouldReturn400_whenRequiredFieldMissing() throws Exception {
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Plano X\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"Plano X\"}"))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(planService);
@@ -258,18 +259,18 @@ class PlanControllerTest {
     @Test
     void create_shouldReturn400_whenUnifiedMissingTotalMinutes() throws Exception {
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Plano X",
-                                  "monthlyPrice": 99.90,
-                                  "fixedLocal": 0.09,
-                                  "fixedLongDistance": 0.21,
-                                  "mobileLocal": 0.45,
-                                  "mobileLongDistance": 0.55,
-                                  "packageType": "UNIFIED"
-                                }
-                                """))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "name": "Plano X",
+                          "monthlyPrice": 99.90,
+                          "fixedLocal": 0.09,
+                          "fixedLongDistance": 0.21,
+                          "mobileLocal": 0.45,
+                          "mobileLongDistance": 0.55,
+                          "packageType": "UNIFIED"
+                        }
+                        """))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(planService);
@@ -278,19 +279,19 @@ class PlanControllerTest {
     @Test
     void create_shouldReturn400_whenPerCategoryMissingField() throws Exception {
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Plano X",
-                                  "monthlyPrice": 99.90,
-                                  "fixedLocal": 0.09,
-                                  "fixedLongDistance": 0.21,
-                                  "mobileLocal": 0.45,
-                                  "mobileLongDistance": 0.55,
-                                  "packageType": "PER_CATEGORY",
-                                  "packageFixedLocal": 200
-                                }
-                                """))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "name": "Plano X",
+                          "monthlyPrice": 99.90,
+                          "fixedLocal": 0.09,
+                          "fixedLongDistance": 0.21,
+                          "mobileLocal": 0.45,
+                          "mobileLongDistance": 0.55,
+                          "packageType": "PER_CATEGORY",
+                          "packageFixedLocal": 200
+                        }
+                        """))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(planService);
@@ -299,19 +300,19 @@ class PlanControllerTest {
     @Test
     void create_shouldReturn400_whenNonePackageHasPackageFields() throws Exception {
         mockMvc.perform(post("/api/plans")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "Plano X",
-                                  "monthlyPrice": 99.90,
-                                  "fixedLocal": 0.09,
-                                  "fixedLongDistance": 0.21,
-                                  "mobileLocal": 0.45,
-                                  "mobileLongDistance": 0.55,
-                                  "packageType": "NONE",
-                                  "packageTotalMinutes": 400
-                                }
-                                """))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "name": "Plano X",
+                          "monthlyPrice": 99.90,
+                          "fixedLocal": 0.09,
+                          "fixedLongDistance": 0.21,
+                          "mobileLocal": 0.45,
+                          "mobileLongDistance": 0.55,
+                          "packageType": "NONE",
+                          "packageTotalMinutes": 400
+                        }
+                        """))
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(planService);
@@ -324,8 +325,8 @@ class PlanControllerTest {
         when(planService.update(eq(1L), any(PlanUpdateDTO.class))).thenReturn(testPlan);
 
         mockMvc.perform(put("/api/plans/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Plano Atualizado\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"Plano Atualizado\"}"))
                 .andExpect(status().isOk());
     }
 
@@ -335,8 +336,8 @@ class PlanControllerTest {
                 .thenThrow(new NotFoundException("Plano não encontrado"));
 
         mockMvc.perform(put("/api/plans/99")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"X\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"X\"}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -346,8 +347,8 @@ class PlanControllerTest {
                 .thenThrow(new BusinessException("Plano já cadastrado"));
 
         mockMvc.perform(put("/api/plans/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\": \"Nome Duplicado\"}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"Nome Duplicado\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -377,5 +378,29 @@ class PlanControllerTest {
 
         mockMvc.perform(delete("/api/plans/99"))
                 .andExpect(status().isNotFound());
+    }
+
+    // --- GET /api/plans/all ---
+
+    @Test
+    void getAllActive_shouldReturn200_withArray() throws Exception {
+        var summaries = List.of(new PlanSummaryDTO(1L, "Plano Básico"));
+        when(planService.findAllSummary()).thenReturn(summaries);
+
+        mockMvc.perform(get("/api/plans/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].name").value("Plano Básico"));
+    }
+
+    @Test
+    void getAllActive_shouldReturn200_withEmptyArray_whenNoActivePlans() throws Exception {
+        when(planService.findAllSummary()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/plans/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }

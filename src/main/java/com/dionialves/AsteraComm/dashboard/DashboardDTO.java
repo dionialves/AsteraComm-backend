@@ -14,21 +14,27 @@ public record DashboardDTO(
         List<TopCircuit> topCircuits,
         CircuitOverageStats circuitOverage) {
 
-    public record CircuitStats(long total, long online, long offline) {}
+    public record CircuitStats(long total, long online, long offline) {
+    }
 
-    public record TrunkStats(long total, long registered, long unregistered) {}
+    public record TrunkStats(long total, long registered, long unregistered) {
+    }
 
-    public record CallStats(long total, long totalMinutes, long answered, long noAnswer, long busy) {}
+    public record CallStats(long total, long totalMinutes, long answered, long noAnswer, long busy) {
+    }
 
     public record BillingStats(
             BigDecimal currentMonthCost,
             BigDecimal previousMonthCost,
             BigDecimal subscriptions,
-            BigDecimal excedents) {}
+            BigDecimal excedents) {
+    }
 
-    public record DailyCallStat(String date, long answered, long noAnswer, long busy, long failed) {}
+    public record DailyCallStat(String date, long answered, long noAnswer, long busy, long failed) {
+    }
 
-    public record MonthlyBillingStat(String month, BigDecimal subscriptions, BigDecimal excedents) {}
+    public record MonthlyBillingStat(String month, BigDecimal subscriptions, BigDecimal excedents) {
+    }
 
     public record CircuitConsumption(
             String circuit,
@@ -36,9 +42,12 @@ public record DashboardDTO(
             String planName,
             long usedMinutes,
             long limitMinutes,
-            double percent) {}
+            double percent) {
+    }
 
-    public record TopCircuit(String customerName, String circuit, long usedMinutes, long limitMinutes) {}
+    public record TopCircuit(String customerName, String circuit, long usedMinutes, long limitMinutes) {
+    }
 
-    public record CircuitOverageStats(long exceeded, long withinLimit) {}
+    public record CircuitOverageStats(long exceeded, long withinLimit) {
+    }
 }

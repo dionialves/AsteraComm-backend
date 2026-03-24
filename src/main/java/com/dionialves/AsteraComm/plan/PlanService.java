@@ -3,6 +3,7 @@ package com.dionialves.AsteraComm.plan;
 import com.dionialves.AsteraComm.exception.BusinessException;
 import com.dionialves.AsteraComm.exception.NotFoundException;
 import com.dionialves.AsteraComm.plan.dto.PlanCreateDTO;
+import com.dionialves.AsteraComm.plan.dto.PlanSummaryDTO;
 import com.dionialves.AsteraComm.plan.dto.PlanUpdateDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -28,6 +30,10 @@ public class PlanService {
         return hasSearch
                 ? planRepository.findByActiveAndNameContainingIgnoreCase(active, search, pageable)
                 : planRepository.findByActive(active, pageable);
+    }
+
+    public List<PlanSummaryDTO> findAllSummary() {
+        return planRepository.findAllSummary();
     }
 
     public Optional<Plan> findById(Long id) {

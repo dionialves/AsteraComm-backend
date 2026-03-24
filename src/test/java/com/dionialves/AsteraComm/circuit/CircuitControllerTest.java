@@ -103,8 +103,8 @@ class CircuitControllerTest {
         when(circuitService.create(any(CircuitCreateDTO.class))).thenReturn(testCircuit);
 
         mockMvc.perform(post("/api/circuits")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isCreated());
     }
 
@@ -113,8 +113,8 @@ class CircuitControllerTest {
         when(circuitService.update(eq("100000"), any(CircuitCreateDTO.class))).thenReturn(testCircuit);
 
         mockMvc.perform(put("/api/circuits/100000")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isOk());
     }
 
@@ -124,8 +124,8 @@ class CircuitControllerTest {
         when(circuitService.update(eq("100000"), any(CircuitCreateDTO.class))).thenReturn(testCircuit);
 
         mockMvc.perform(put("/api/circuits/100000")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\",\"customerId\":1,\"active\":false}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"secret\",\"trunkName\":\"opasuite\",\"customerId\":1,\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
     }
@@ -136,24 +136,9 @@ class CircuitControllerTest {
                 .thenThrow(new NotFoundException("Circuito não encontrado"));
 
         mockMvc.perform(put("/api/circuits/999999")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"newpassword\",\"trunkName\":\"opasuite\",\"customerId\":1}"))
                 .andExpect(status().isNotFound());
-    }
-
-    // === Novos testes US-041 — summary e filtros de listagem ===
-
-    @Test
-    void getSummary_shouldReturn200_withCorrectFields() throws Exception {
-        CircuitSummaryDTO summary = new CircuitSummaryDTO(10L, 7L, 5L, 3L);
-        when(circuitService.getSummary()).thenReturn(summary);
-
-        mockMvc.perform(get("/api/circuits/summary"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(10))
-                .andExpect(jsonPath("$.active").value(7))
-                .andExpect(jsonPath("$.online").value(5))
-                .andExpect(jsonPath("$.inactive").value(3));
     }
 
     @Test
@@ -224,5 +209,29 @@ class CircuitControllerTest {
 
         mockMvc.perform(delete("/api/circuits/999999"))
                 .andExpect(status().isNotFound());
+    }
+
+    // --- GET /api/circuits/all ---
+
+    @Test
+    void getAllSelect_shouldReturn200_withArray() throws Exception {
+        var summaries = List.of(new CircuitSummaryDTO("100001", "Empresa Alpha"));
+        when(circuitService.findAllSummary()).thenReturn(summaries);
+
+        mockMvc.perform(get("/api/circuits/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].number").value("100001"))
+                .andExpect(jsonPath("$[0].customerName").value("Empresa Alpha"));
+    }
+
+    @Test
+    void getAllSelect_shouldReturn200_withEmptyArray_whenNoCircuits() throws Exception {
+        when(circuitService.findAllSummary()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/circuits/summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }

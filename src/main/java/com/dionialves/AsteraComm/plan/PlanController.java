@@ -21,6 +21,11 @@ public class PlanController {
 
     private final PlanService planService;
 
+    @GetMapping("/summary")
+    public ResponseEntity<?> findAllSummary() {
+        return ResponseEntity.ok(planService.findAllSummary());
+    }
+
     @GetMapping
     public Page<Plan> findAll(
             @RequestParam(defaultValue = "") String search,

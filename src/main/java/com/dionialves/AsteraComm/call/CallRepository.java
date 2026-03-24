@@ -1,6 +1,5 @@
 package com.dionialves.AsteraComm.call;
 
-import com.dionialves.AsteraComm.circuit.Circuit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -36,8 +35,8 @@ public interface CallRepository extends JpaRepository<Call, Long>,
             "AND EXTRACT(MONTH FROM call_date) = :month " +
             "AND EXTRACT(YEAR  FROM call_date) = :year", nativeQuery = true)
     long countByDispositionAndPeriod(@Param("disposition") String disposition,
-                                     @Param("month") int month,
-                                     @Param("year") int year);
+            @Param("month") int month,
+            @Param("year") int year);
 
     @Query(value = "SELECT COALESCE(SUM(cost), 0) FROM asteracomm_calls " +
             "WHERE call_status = 'PROCESSED' " +
@@ -52,8 +51,8 @@ public interface CallRepository extends JpaRepository<Call, Long>,
             "AND EXTRACT(YEAR  FROM call_date) = :year " +
             "ORDER BY call_date ASC", nativeQuery = true)
     List<Call> findByCircuitNumberAndPeriod(@Param("circuitNumber") String circuitNumber,
-                                            @Param("month") int month,
-                                            @Param("year") int year);
+            @Param("month") int month,
+            @Param("year") int year);
 
     @Query(value = "SELECT COALESCE(SUM(minutes_from_quota), 0) FROM asteracomm_calls " +
             "WHERE circuit_number = :circuitNumber " +
@@ -61,8 +60,8 @@ public interface CallRepository extends JpaRepository<Call, Long>,
             "AND EXTRACT(MONTH FROM call_date) = :month " +
             "AND EXTRACT(YEAR  FROM call_date) = :year", nativeQuery = true)
     int sumQuotaMinutes(@Param("circuitNumber") String circuitNumber,
-                        @Param("month") int month,
-                        @Param("year") int year);
+            @Param("month") int month,
+            @Param("year") int year);
 
     @Query(value = "SELECT COALESCE(SUM(minutes_from_quota), 0) FROM asteracomm_calls " +
             "WHERE circuit_number = :circuitNumber " +
@@ -71,9 +70,9 @@ public interface CallRepository extends JpaRepository<Call, Long>,
             "AND EXTRACT(MONTH FROM call_date) = :month " +
             "AND EXTRACT(YEAR  FROM call_date) = :year", nativeQuery = true)
     int sumQuotaMinutesByType(@Param("circuitNumber") String circuitNumber,
-                              @Param("callType") String callType,
-                              @Param("month") int month,
-                              @Param("year") int year);
+            @Param("callType") String callType,
+            @Param("month") int month,
+            @Param("year") int year);
 
     @Query(value = """
             SELECT

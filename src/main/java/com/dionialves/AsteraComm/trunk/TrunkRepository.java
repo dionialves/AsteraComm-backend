@@ -1,14 +1,19 @@
 package com.dionialves.AsteraComm.trunk;
 
+import com.dionialves.AsteraComm.trunk.dto.TrunkSummaryDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface TrunkRepository extends JpaRepository<Trunk, Long> {
+
+    @Query("SELECT new com.dionialves.AsteraComm.trunk.dto.TrunkSummaryDTO(t.name) FROM Trunk t ORDER BY t.name")
+    List<TrunkSummaryDTO> findAllSummary();
 
     Optional<Trunk> findByName(String name);
 
