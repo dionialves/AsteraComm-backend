@@ -24,16 +24,14 @@ public record DashboardDTO(
     }
 
     public record BillingStats(
-            BigDecimal currentMonthCost,
-            BigDecimal previousMonthCost,
-            BigDecimal subscriptions,
-            BigDecimal excedents) {
+            BigDecimal excedents,
+            BigDecimal previousMonthCost) {
     }
 
     public record DailyCallStat(String date, long answered, long noAnswer, long busy, long failed) {
     }
 
-    public record MonthlyBillingStat(String month, BigDecimal subscriptions, BigDecimal excedents) {
+    public record MonthlyBillingStat(String month, BigDecimal excedents) {
     }
 
     public record CircuitConsumption(

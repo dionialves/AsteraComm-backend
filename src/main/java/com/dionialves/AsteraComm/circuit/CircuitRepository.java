@@ -78,10 +78,6 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
             """, nativeQuery = true)
     long countOnline();
 
-    @Query(value = "SELECT COALESCE(SUM(p.monthly_price), 0) " +
-            "FROM asteracomm_circuits c JOIN asteracomm_plans p ON p.id = c.plan_id", nativeQuery = true)
-    BigDecimal sumMonthlyPrices();
-
     @Query(value = """
             WITH last_status AS (
                 SELECT DISTINCT ON (endpoint) *

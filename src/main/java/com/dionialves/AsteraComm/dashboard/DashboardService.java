@@ -52,9 +52,6 @@ public class DashboardService {
         // Billing
         BigDecimal excedents = callRepository.sumCostByPeriod(currentMonth, currentYear);
         BigDecimal prevCost = callRepository.sumCostByPeriod(prevMonth, prevYear);
-        BigDecimal subscriptions = circuitRepository.sumMonthlyPrices();
-        if (subscriptions == null) subscriptions = BigDecimal.ZERO;
-        BigDecimal currentMonthCost = subscriptions.add(excedents);
 
         // Daily call stats — last 30 days
         LocalDate thirtyDaysAgo = now.minusDays(29);
@@ -64,7 +61,7 @@ public class DashboardService {
         // Monthly billing — last 12 months
         LocalDate twelveMonthsAgo = now.minusMonths(11).withDayOfMonth(1);
         List<Object[]> monthlyRaw = callRepository.findMonthlyCallCosts(twelveMonthsAgo);
-        List<DashboardDTO.MonthlyBillingStat> monthlyBilling = buildMonthlyBilling(monthlyRaw, subscriptions, now);
+        List<DashboardDTO.MonthlyBillingStat> monthlyBilling = buildMonthlyBilling(monthlyRaw, now);
 
         // Circuit consumption — current month
         List<Object[]> consumptionRaw = callRepository.findCircuitConsumption(currentMonth, currentYear);
@@ -101,7 +98,7 @@ public class DashboardService {
                 new DashboardDTO.CircuitStats(totalCircuits, onlineCircuits, totalCircuits - onlineCircuits),
                 new DashboardDTO.TrunkStats(totalTrunks, registeredTrunks, totalTrunks - registeredTrunks),
                 new DashboardDTO.CallStats(totalCalls, totalBillSeconds / 60, answered, noAnswer, busy),
-                new DashboardDTO.BillingStats(currentMonthCost, prevCost, subscriptions, excedents),
+                new DashboardDTO.BillingStats(excedents, prevCost),
                 dailyCalls,
                 monthlyBilling,
                 nearLimitCircuits,
@@ -132,9 +129,7 @@ public class DashboardService {
         return result;
     }
 
-    private List<DashboardDTO.MonthlyBillingStat> buildMonthlyBilling(
-            List<Object[]> raw, BigDecimal subscriptions, LocalDate now) {
-
+    private List<DashboardDTO.MonthlyBillingStat> buildMonthlyBilling(List<Object[]> raw, LocalDate now) {
         Map<String, BigDecimal> map = new HashMap<>();
         for (Object[] row : raw) {
             int year = ((Number) row[0]).intValue();
@@ -153,8 +148,7 @@ public class DashboardService {
             LocalDate d = now.minusMonths(i);
             String key = String.format("%04d-%02d", d.getYear(), d.getMonthValue());
             String label = monthLabels[d.getMonthValue() - 1] + "/" + String.format("%02d", d.getYear() % 100);
-            BigDecimal excedents = map.getOrDefault(key, BigDecimal.ZERO);
-            result.add(new DashboardDTO.MonthlyBillingStat(label, subscriptions, excedents));
+            result.add(new DashboardDTO.MonthlyBillingStat(label, map.getOrDefault(key, BigDecimal.ZERO)));
         }
         return result;
     }

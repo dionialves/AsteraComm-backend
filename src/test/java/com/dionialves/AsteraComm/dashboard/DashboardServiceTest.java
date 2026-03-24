@@ -169,7 +169,7 @@ class DashboardServiceTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void getDashboard_billingStats_currentAndPreviousMonthCostsAreCorrect() {
+    void getDashboard_billingStats_excedentsAndPreviousMonthAreCorrect() {
         stubCircuits(0L, 0L);
         stubTrunks(0L, 0L);
         stubCalls(0L, 0L, 0L, 0L, 0L,
@@ -178,7 +178,7 @@ class DashboardServiceTest {
 
         DashboardDTO result = dashboardService.getDashboard();
 
-        assertThat(result.billing().currentMonthCost())
+        assertThat(result.billing().excedents())
                 .isEqualByComparingTo(new BigDecimal("450.00"));
         assertThat(result.billing().previousMonthCost())
                 .isEqualByComparingTo(new BigDecimal("380.00"));
@@ -192,7 +192,7 @@ class DashboardServiceTest {
 
         DashboardDTO result = dashboardService.getDashboard();
 
-        assertThat(result.billing().currentMonthCost())
+        assertThat(result.billing().excedents())
                 .isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(result.billing().previousMonthCost())
                 .isEqualByComparingTo(BigDecimal.ZERO);
