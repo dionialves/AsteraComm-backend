@@ -28,6 +28,11 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> findAll(String search, int page, int size, String sort) {
+        return findAll(search, null, page, size, sort);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponseDTO> findAll(String search, Boolean enabled, int page, int size, String sort) {
 
         String[] sortParts = sort.split(",");
         String sortField = sortParts[0];
@@ -36,8 +41,38 @@ public class UserService {
                 : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortField));
 
+        boolean hasSearch = search != null && !search.isBlank();
         Page<User> users;
-        if (search != null && !search.isBlank()) {
+        if (enabled != null && hasSearch) {
+            users = userRepository.findByEnabledAndSearch(enabled, search, pageable);
+        } else if (enabled != null) {
+            users = userRepository.findByEnabled(enabled, pageable);
+        } else if (hasSearch) {
+            users = userRepository.findByNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(
+                    search, search, pageable);
+        } else {
+            users = userRepository.findAll(pageable);
+        }
+        return users.map(UserResponseDTO::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponseDTO> findAll(String search, int page, int size, String sort, UserRole role) {
+
+        String[] sortParts = sort.split(",");
+        String sortField = sortParts[0];
+        Sort.Direction sortDirection = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortField));
+
+        boolean hasSearch = search != null && !search.isBlank();
+        Page<User> users;
+        if (role != null && hasSearch) {
+            users = userRepository.findByRoleAndSearch(role, search, pageable);
+        } else if (role != null) {
+            users = userRepository.findByRole(role, pageable);
+        } else if (hasSearch) {
             users = userRepository.findByNameContainingIgnoreCaseOrUsernameContainingIgnoreCase(
                     search, search, pageable);
         } else {

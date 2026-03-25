@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title layout:title-pattern="$CONTENT_TITLE — AsteraComm">AsteraComm</title>
   <link rel="stylesheet" th:href="@{/css/output.css}"/>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body class="font-sans">
 
@@ -200,6 +202,14 @@
 
   <script th:src="@{/js/htmx.min.js}"></script>
   <script>
+    // ── CSRF: injetar token em todos os requests HTMX ──────────────────────
+    document.body.addEventListener('htmx:configRequest', function (evt) {
+      var header = document.querySelector('meta[name="_csrf_header"]')?.content;
+      var token  = document.querySelector('meta[name="_csrf"]')?.content;
+      if (header && token) evt.detail.headers[header] = token;
+    });
+  </script>
+  <script>
     // ── Sidebar: submenu toggle ──────────────────────────────────────────────
     [
       { btn: 'btn-menu-cadastro',     menu: 'menu-cadastro',     chevron: 'chevron-cadastro' },
@@ -243,6 +253,24 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
+
+    // ── Modal: botão deletar (duplo clique) ──────────────────────────────────
+    function handleModalDelete(btn) {
+      if (!btn.dataset.step) {
+        btn.dataset.step = '1';
+        btn._deleteTimer = setTimeout(function () {
+          delete btn.dataset.step;
+          btn.textContent = 'Deletar';
+          btn.classList.remove('confirm');
+        }, 3000);
+        btn.textContent = 'Confirmar exclusão?';
+        btn.classList.add('confirm');
+        return;
+      }
+      clearTimeout(btn._deleteTimer);
+      delete btn.dataset.step;
+      htmx.trigger(btn, 'confirmed');
+    }
 
     // ── HTMX: fechar dropdown ao abrir modal ─────────────────────────────────
     document.body.addEventListener('htmx:afterSwap', (e) => {

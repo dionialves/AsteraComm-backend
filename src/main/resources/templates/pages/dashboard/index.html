@@ -11,7 +11,10 @@
 
   <!-- ── Cabeçalho ─────────────────────────────────────────────────────────── -->
   <div class="mb-5">
-    <h1 class="text-[22px] font-medium text-[#1a1a1a]">AsteraComm</h1>
+    <div class="flex items-baseline gap-[10px]">
+      <h1 class="text-[22px] font-medium text-[#1a1a1a]">AsteraComm</h1>
+      <span id="last-updated" class="text-[12px] text-[#9ca3af]"></span>
+    </div>
     <p class="text-[13px] text-[#888] mt-0.5" th:text="${subtitle}">Painel de monitoramento</p>
   </div>
 
@@ -225,6 +228,15 @@
       <canvas id="chartTopCircuits"></canvas>
     </div>
   </div>
+
+  <!-- ── Horário da última atualização ─────────────────────────────────────── -->
+  <script>
+    (function () {
+      const now = new Date();
+      document.getElementById("last-updated").textContent =
+        "Atualizado às " + now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    })();
+  </script>
 
   <!-- ── Dados para Chart.js (injetados server-side) ────────────────────────── -->
   <script th:inline="javascript">

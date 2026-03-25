@@ -1,5 +1,6 @@
 ### Project
 .env
+src/main/resources/.reload-trigger
 .tool-versions
 
 HELP.md

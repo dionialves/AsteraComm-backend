@@ -11,6 +11,7 @@ EXPOSE 8090
 
 # Copiado para fora de /app para nao ser sobrescrito pelo volume mount
 COPY entrypoint-dev.sh /entrypoint-dev.sh
+
 RUN chmod +x /entrypoint-dev.sh
 
 CMD ["/entrypoint-dev.sh"]
