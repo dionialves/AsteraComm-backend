@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Fragment: confirm-delete
+  Parâmetros:
+    - deleteUrl : endpoint DELETE (ex: "/trunks/42")
+    - hxTarget  : seletor alvo após delete (ex: "#table-container")
+    - hxInclude : seletor para incluir filtros na req (ex: ".trunk-filter") — opcional
+    - label     : nome do objeto para a mensagem (ex: "o tronco")
+
+  Uso:
+    <div th:replace="~{fragments/confirm-delete :: confirm-delete(deleteUrl='/trunks/42', hxTarget='#table-container', hxInclude='.trunk-filter', label='o tronco')}"></div>
+-->
+<button th:fragment="confirm-delete(deleteUrl, hxTarget, hxInclude, label)"
+        th:attr="hx-delete=${deleteUrl},
+                 hx-target=${hxTarget},
+                 hx-swap='innerHTML',
+                 hx-include=${hxInclude},
+                 hx-confirm=${'Tem certeza que deseja excluir ' + label + '? Esta ação não pode ser desfeita.'}"
+        class="flex items-center gap-1.5 text-[13px] text-[#791F1F] border border-[#f5c6cb] bg-[#fff5f5] px-3 py-[7px] rounded-md hover:bg-[#ffe0e0] transition-colors cursor-pointer">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+  </svg>
+  Excluir
+</button>
+
+</body>
+</html>

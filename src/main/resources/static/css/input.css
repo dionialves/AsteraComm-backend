@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #1D9E75;
+    --color-primary-dark: #085041;
+    --color-danger: #791F1F;
+    --color-text: #1a1a1a;
+    --color-muted: #888;
+    --color-border: #e0e0e0;
+    --color-surface: #f5f5f5;
+    --color-selected-bg: #E6F1FB;
+    --color-selected-border: #378ADD;
+  }
+}
+
+@layer utilities {
+  .toast-fadeout {
+    animation: toastFadeOut 3s forwards;
+  }
+
+  @keyframes toastFadeOut {
+    0%   { opacity: 1; transform: translateY(0); }
+    70%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-8px); }
+  }
+}
