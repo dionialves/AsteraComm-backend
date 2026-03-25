@@ -90,7 +90,7 @@
 .btn-modal-save:hover { opacity: 0.9; }
 
 /* ── Linhas de tabela (CSS Grid) ─────────────────────────────────────────── */
-.trunk-row, .plan-row, .did-row, .user-row {
+.trunk-row, .plan-row, .did-row, .user-row, .customer-row {
   padding: 11px 16px;
   align-items: center;
   cursor: pointer;
@@ -99,11 +99,14 @@
   transition: background 0.1s;
 }
 .trunk-row:last-child, .plan-row:last-child,
-.did-row:last-child, .user-row:last-child { border-bottom: none; }
+.did-row:last-child, .user-row:last-child,
+.customer-row:last-child { border-bottom: none; }
 .trunk-row:hover, .plan-row:hover,
-.did-row:hover, .user-row:hover { background: #fafafa; }
+.did-row:hover, .user-row:hover,
+.customer-row:hover { background: #fafafa; }
 .trunk-row.row-selected, .plan-row.row-selected,
-.did-row.row-selected, .user-row.row-selected {
+.did-row.row-selected, .user-row.row-selected,
+.customer-row.row-selected {
   background: #E6F1FB !important;
   border-left: 2px solid #378ADD;
 }
@@ -132,6 +135,13 @@
 }
 .user-row.row-inactive { opacity: 0.55; }
 .user-row.row-inactive:hover { opacity: 0.75; }
+.customer-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0,1fr) 68px 90px 140px 140px;
+  gap: 8px;
+}
+.customer-row.row-inactive { opacity: 0.55; }
+.customer-row.row-inactive:hover { opacity: 0.75; }
 
 /* ── Toggle switch ────────────────────────────────────────────────────────── */
 .toggle-label { font-size: 13px; color: #374151; }
