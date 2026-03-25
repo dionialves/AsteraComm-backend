@@ -14,6 +14,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
@@ -28,11 +30,15 @@ public class SecurityFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         var token = recoveryToken(request);
         if (token != null) {
-            var login = tokenService.validateToken(token);
-            UserDetails user = userRepository.findByUsername(login);
+            try {
+                var login = tokenService.validateToken(token);
+                UserDetails user = userRepository.findByUsername(login);
 
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (JWTVerificationException ignored) {
+                // Token inválido ou expirado — segue sem autenticação; Spring Security retorna 401
+            }
         }
 
         filterChain.doFilter(request, response);
