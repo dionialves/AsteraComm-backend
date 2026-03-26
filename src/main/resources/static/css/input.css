@@ -90,7 +90,7 @@
 .btn-modal-save:hover { opacity: 0.9; }
 
 /* ── Linhas de tabela (CSS Grid) ─────────────────────────────────────────── */
-.trunk-row, .plan-row, .did-row, .user-row, .customer-row {
+.trunk-row, .plan-row, .did-row, .user-row, .customer-row, .circuit-row {
   padding: 11px 16px;
   align-items: center;
   cursor: pointer;
@@ -100,13 +100,13 @@
 }
 .trunk-row:last-child, .plan-row:last-child,
 .did-row:last-child, .user-row:last-child,
-.customer-row:last-child { border-bottom: none; }
+.customer-row:last-child, .circuit-row:last-child { border-bottom: none; }
 .trunk-row:hover, .plan-row:hover,
 .did-row:hover, .user-row:hover,
-.customer-row:hover { background: #fafafa; }
+.customer-row:hover, .circuit-row:hover { background: #fafafa; }
 .trunk-row.row-selected, .plan-row.row-selected,
 .did-row.row-selected, .user-row.row-selected,
-.customer-row.row-selected {
+.customer-row.row-selected, .circuit-row.row-selected {
   background: #E6F1FB !important;
   border-left: 2px solid #378ADD;
 }
@@ -142,6 +142,90 @@
 }
 .customer-row.row-inactive { opacity: 0.55; }
 .customer-row.row-inactive:hover { opacity: 0.75; }
+.circuit-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 68px 64px 120px;
+  gap: 8px;
+}
+.circuit-row.row-inactive { opacity: 0.55; }
+.circuit-row.row-inactive:hover { opacity: 0.75; }
+
+/* ── SearchSelect ─────────────────────────────────────────────────────────── */
+.ss-hidden { display: none !important; }
+
+/* Trigger — estado sem seleção */
+.ss-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+.ss-trigger:hover { border-color: #bbb; }
+.ss-trigger-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1a1a1a; }
+.ss-placeholder { color: #aaa; }
+.ss-arrow { flex-shrink: 0; color: #aaa; margin-left: 8px; display: flex; align-items: center; }
+
+/* Dropdown de opções */
+.ss-dropdown {
+  position: absolute;
+  z-index: 200;
+  left: 0; right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.ss-search-input {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13px;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 6px 6px 0 0;
+  outline: none;
+  box-sizing: border-box;
+}
+.ss-options { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto; }
+.ss-option { padding: 9px 12px; font-size: 13px; color: #1a1a1a; cursor: pointer; }
+.ss-option:hover { background: #f5f5f5; }
+.ss-empty { padding: 9px 12px; font-size: 13px; color: #aaa; cursor: default; }
+
+/* Chip — estado com valor selecionado (integrado ao input, sem gaps) */
+.ss-chip {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  background: #f5f5f5;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ss-chip-text { flex: 1; min-width: 0; padding: 0 10px; font-size: 13px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-chip-clear {
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-left: 1px solid #d0d0d0;
+  cursor: pointer;
+  color: #999;
+  transition: background 0.12s;
+}
+.ss-chip-clear:hover { background: #ffe4e4; color: #ef4444; }
 
 /* ── Toggle switch ────────────────────────────────────────────────────────── */
 .toggle-label { font-size: 13px; color: #374151; }

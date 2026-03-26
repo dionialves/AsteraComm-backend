@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Map;
@@ -35,5 +36,13 @@ public class FragmentController {
         List<SearchOptionDTO> options = provider != null ? provider.search(q) : List.of();
         model.addAttribute("options", options);
         return "fragments/search-select :: search-options(options=${options})";
+    }
+
+    @GetMapping("/search-options-json")
+    @ResponseBody
+    public List<SearchOptionDTO> searchOptionsJson(@RequestParam String field,
+                                                   @RequestParam(defaultValue = "") String q) {
+        SearchOptionsProvider provider = providers.get(field);
+        return provider != null ? provider.search(q) : List.of();
     }
 }

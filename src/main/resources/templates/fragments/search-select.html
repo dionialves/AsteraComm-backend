@@ -5,109 +5,35 @@
 <!--
   Fragment: search-select
   Parâmetros:
-    - fieldName   : nome do campo hidden submetido no form (ex: "trunkId")
-    - placeholder : texto placeholder do input (ex: "Buscar tronco...")
-    - selectedId  : valor inicial do campo hidden (ex: ${circuit.trunkId}) — opcional
-    - selectedLabel: label inicial exibido no input (ex: ${circuit.trunkName}) — opcional
+    - fieldName    : nome do campo hidden submetido no form (ex: "planId")
+    - placeholder  : texto do placeholder (ex: "Buscar plano...")
+    - selectedId   : valor inicial do campo hidden — opcional
+    - selectedLabel: label inicial exibido no chip — opcional
+
+  O backend deve ter um @Service("<fieldName>") implementando SearchOptionsProvider.
 
   Uso:
     <div th:replace="~{fragments/search-select :: search-select(
-        fieldName='trunkId',
-        placeholder='Buscar tronco...',
-        selectedId=${circuit.trunk?.id},
-        selectedLabel=${circuit.trunk?.name})}"></div>
+        fieldName='planId',
+        placeholder='Buscar plano...',
+        selectedId=${obj?.plan?.id},
+        selectedLabel=${obj?.plan?.name})}"></div>
 -->
 <div th:fragment="search-select(fieldName, placeholder, selectedId, selectedLabel)"
-     class="relative search-select-wrapper">
+     class="relative"
+     th:attr="data-search-select='true',
+              data-field-name=${fieldName},
+              data-placeholder=${placeholder},
+              data-selected-label=${selectedLabel ?: ''}">
 
-  <!-- Input visível (texto de busca) -->
-  <div class="relative">
-    <svg class="absolute left-[10px] top-1/2 -translate-y-1/2 text-[#aaa] pointer-events-none"
-         width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-    <input type="text"
-           th:id="${fieldName + '-search'}"
-           th:placeholder="${placeholder}"
-           th:value="${selectedLabel}"
-           autocomplete="off"
-           th:attr="data-field=${fieldName},
-                    hx-get='/fragments/search-options',
-                    hx-trigger='input changed delay:200ms',
-                    hx-target=${'#' + fieldName + '-options'},
-                    hx-swap='innerHTML',
-                    hx-vals=${'js:{field: &quot;' + fieldName + '&quot;, q: event.target.value}'}"
-           class="w-full pl-[34px] pr-3 py-[9px] text-[13px] border border-[#e0e0e0] rounded-md outline-none focus:border-[#1D9E75] transition-colors bg-white"/>
-  </div>
-
-  <!-- Hidden input submetido no form -->
+  <!-- Valor real submetido no form -->
   <input type="hidden"
          th:id="${fieldName}"
          th:name="${fieldName}"
          th:value="${selectedId}"/>
 
-  <!-- Dropdown de opções -->
-  <ul th:id="${fieldName + '-options'}"
-      class="absolute z-50 w-full bg-white border border-[#e0e0e0] rounded-md shadow-lg max-h-[200px] overflow-y-auto hidden mt-1">
-    <!-- Opções injetadas via HTMX -->
-  </ul>
-
-  <script th:inline="javascript">
-    (function () {
-      const fieldName = /*[[${fieldName}]]*/ '';
-      const searchInput = document.getElementById(fieldName + '-search');
-      const hiddenInput = document.getElementById(fieldName);
-      const optionsList = document.getElementById(fieldName + '-options');
-
-      // Mostrar dropdown ao receber resultados via HTMX
-      document.body.addEventListener('htmx:afterSwap', function (e) {
-        if (e.detail.target === optionsList) {
-          optionsList.classList.toggle('hidden', optionsList.children.length === 0);
-        }
-      });
-
-      // Selecionar opção
-      optionsList?.addEventListener('click', function (e) {
-        const li = e.target.closest('li[data-value]');
-        if (!li) return;
-        hiddenInput.value = li.dataset.value;
-        searchInput.value = li.dataset.label || li.textContent.trim();
-        optionsList.classList.add('hidden');
-      });
-
-      // Fechar dropdown ao clicar fora
-      document.addEventListener('click', function (e) {
-        if (!searchInput?.contains(e.target) && !optionsList?.contains(e.target)) {
-          optionsList?.classList.add('hidden');
-        }
-      });
-
-      // Limpar hidden ao apagar o texto
-      searchInput?.addEventListener('input', function () {
-        if (!searchInput.value.trim()) hiddenInput.value = '';
-      });
-    })();
-  </script>
-
+  <!-- O SearchSelect (search-select.js) injeta o trigger, dropdown e chip aqui -->
 </div>
-
-<!--
-  Fragment: search-options
-  Retornado pelo endpoint /fragments/search-options
-  Parâmetros (via model):
-    - options: List<SearchOptionDTO> com campos id e label
--->
-<th:block th:fragment="search-options(options)">
-  <li th:if="${options == null or options.isEmpty()}"
-      class="px-3 py-[9px] text-[13px] text-[#aaa] select-none">
-    Nenhum resultado encontrado
-  </li>
-  <li th:each="opt : ${options}"
-      th:attr="data-value=${opt.id}, data-label=${opt.label}"
-      th:text="${opt.label}"
-      class="px-3 py-[9px] text-[13px] text-[#1a1a1a] cursor-pointer hover:bg-[#f5f5f5] select-none">
-  </li>
-</th:block>
 
 </body>
 </html>

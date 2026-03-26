@@ -201,6 +201,7 @@
   <div id="toast-container" class="fixed bottom-4 right-4 z-[300] flex flex-col gap-2 pointer-events-none"></div>
 
   <script th:src="@{/js/htmx.min.js}"></script>
+  <script th:src="@{/js/search-select.js}"></script>
   <script>
     // ── CSRF: injetar token em todos os requests HTMX ──────────────────────
     document.body.addEventListener('htmx:configRequest', function (evt) {
