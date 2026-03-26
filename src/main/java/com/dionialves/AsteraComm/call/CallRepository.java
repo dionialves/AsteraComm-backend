@@ -15,6 +15,9 @@ public interface CallRepository extends JpaRepository<Call, Long>,
 
     Optional<Call> findByUniqueId(String uniqueId);
 
+    @Query(value = "SELECT * FROM asteracomm_calls WHERE circuit_number = :number AND call_status = 'PROCESSED' ORDER BY call_date DESC LIMIT 50", nativeQuery = true)
+    List<Call> findRecentByCircuitNumber(@Param("number") String number);
+
     boolean existsByCircuitNumber(String circuitNumber);
 
     @Query(value = "SELECT COUNT(*) FROM asteracomm_calls " +

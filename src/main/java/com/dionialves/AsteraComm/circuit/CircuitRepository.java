@@ -18,6 +18,9 @@ public interface CircuitRepository extends JpaRepository<Circuit, Long> {
 
     Optional<Circuit> findByNumber(String number);
 
+    @Query("SELECT c FROM Circuit c JOIN FETCH c.customer JOIN FETCH c.plan WHERE c.number = :number")
+    Optional<Circuit> findByNumberForModal(@Param("number") String number);
+
     @Query(value = """
             SELECT MAX(c.number)
                 FROM asteracomm_circuits c
