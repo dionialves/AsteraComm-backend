@@ -5,6 +5,7 @@ import org.asteriskjava.manager.ManagerConnectionFactory;
 import org.asteriskjava.manager.action.CommandAction;
 import org.asteriskjava.manager.response.CommandResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,6 +23,7 @@ public class AmiService {
     @Value("${asterisk.password}")
     private String password;
 
+    @Async
     public void sendCommand(String command) {
         try {
             ManagerConnectionFactory factory = new ManagerConnectionFactory(hostname, port, username, password);
