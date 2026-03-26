@@ -18,7 +18,7 @@
 
 @layer utilities {
   .toast-fadeout {
-    animation: toastFadeOut 3s forwards;
+    animation: toastFadeOut 5s forwards;
   }
 
   @keyframes toastFadeOut {

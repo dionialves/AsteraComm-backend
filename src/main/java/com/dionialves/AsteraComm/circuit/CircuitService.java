@@ -99,8 +99,7 @@ public class CircuitService {
         }
 
         if (callRepository.existsByCircuitNumber(number)) {
-            circuit.setActive(false);
-            return Optional.of(circuitRepository.save(circuit));
+            throw new BusinessException("Não é possível excluir um circuito com chamadas associadas.");
         }
 
         asteriskProvisioningService.deprovision(circuit);
