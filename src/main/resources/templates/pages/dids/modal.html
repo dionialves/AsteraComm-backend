@@ -83,7 +83,7 @@
                     <div th:if="${did.circuit == null}" class="contents">
                         <div th:replace="~{fragments/confirm-delete :: confirm-delete(
               deleteUrl=${'/dids/' + did.id},
-              hxTarget='#table-container',
+              hxTarget='#modal-container',
               hxInclude='.did-filter',
               label=${'o DID ' + did.number})}">
                         </div>

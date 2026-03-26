@@ -27,7 +27,7 @@
     <!-- Form unificado -->
     <form th:attr="hx-post=${trunk == null ? '/trunks' : null},
                   hx-put=${trunk != null ? '/trunks/' + trunk.name : null},
-                  hx-target=${trunk == null ? '#modal-container' : '#table-container'}"
+                  hx-target='#modal-container'"
           hx-swap="innerHTML"
           class="flex flex-col flex-1 min-h-0">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -116,7 +116,7 @@
         <div th:if="${trunk != null}" class="contents">
           <div th:replace="~{fragments/confirm-delete :: confirm-delete(
               deleteUrl=${'/trunks/' + trunk.name},
-              hxTarget='#table-container',
+              hxTarget='#modal-container',
               hxInclude='.trunk-filter',
               label=${'o tronco ' + trunk.name})}">
           </div>

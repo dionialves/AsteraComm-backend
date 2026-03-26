@@ -28,7 +28,7 @@
             <!-- Form unificado -->
             <form th:attr="hx-post=${user == null ? '/users' : null},
                   hx-put=${user != null ? '/users/' + user.id : null},
-                  hx-target=${user == null ? '#modal-container' : '#table-container'}" hx-swap="innerHTML"
+                  hx-target='#modal-container'" hx-swap="innerHTML"
                 class="flex flex-col flex-1 min-h-0">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
@@ -105,7 +105,7 @@
                     <div th:if="${user != null}" class="contents">
                         <div th:replace="~{fragments/confirm-delete :: confirm-delete(
               deleteUrl=${'/users/' + user.id},
-              hxTarget='#table-container',
+              hxTarget='#modal-container',
               hxInclude='.user-filter',
               label=${'o usuário ' + user.name})}">
                         </div>

@@ -113,12 +113,15 @@ public class DidViewController {
             didService.delete(id);
             model.addAttribute("toastMsg", "DID removido com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
+            model.addAttribute("tableUrl", "/dids/table");
+            return "fragments/modal-close :: close";
         } catch (Exception e) {
+            model.addAttribute("did", didService.findById(id).orElse(null));
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
+            return "pages/dids/modal :: modal";
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

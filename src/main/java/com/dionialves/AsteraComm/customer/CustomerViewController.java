@@ -87,12 +87,17 @@ public class CustomerViewController {
             customerService.update(id, new CustomerCreateDTO(name, Boolean.TRUE.equals(enabled)));
             model.addAttribute("toastMsg", "Cliente atualizado com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
         } catch (Exception e) {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
+        Customer customer = customerService.findById(id).orElse(null);
+        model.addAttribute("customer", customer);
+        if (customer != null) {
+            model.addAttribute("circuits", circuitRepository.findByCustomerIdProjected(id));
+        }
+        return "pages/customers/modal :: modal";
     }
 
     @DeleteMapping("/{id}")
@@ -101,12 +106,19 @@ public class CustomerViewController {
             customerService.delete(id);
             model.addAttribute("toastMsg", "Cliente removido com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
+            model.addAttribute("tableUrl", "/customers/table");
+            return "fragments/modal-close :: close";
         } catch (Exception e) {
+            Customer customer = customerService.findById(id).orElse(null);
+            model.addAttribute("customer", customer);
+            if (customer != null) {
+                model.addAttribute("circuits", circuitRepository.findByCustomerIdProjected(id));
+            }
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
+            return "pages/customers/modal :: modal";
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

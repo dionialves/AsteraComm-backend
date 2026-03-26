@@ -87,12 +87,13 @@ public class TrunkViewController {
                     prefix.isBlank() ? null : prefix));
             model.addAttribute("toastMsg", "Tronco atualizado com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
         } catch (Exception e) {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
+        model.addAttribute("trunk", trunkService.findByName(name).orElse(null));
+        return "pages/trunks/modal :: modal";
     }
 
     @DeleteMapping("/{name}")
@@ -101,12 +102,15 @@ public class TrunkViewController {
             trunkService.delete(name);
             model.addAttribute("toastMsg", "Tronco removido com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
+            model.addAttribute("tableUrl", "/trunks/table");
+            return "fragments/modal-close :: close";
         } catch (Exception e) {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
+            model.addAttribute("trunk", trunkService.findByName(name).orElse(null));
+            return "pages/trunks/modal :: modal";
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

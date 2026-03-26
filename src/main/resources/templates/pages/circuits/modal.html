@@ -47,7 +47,7 @@
     <!-- Form (wraps body + footer) -->
     <form th:attr="hx-post=${circuit == null ? '/circuits' : null},
                   hx-put=${circuit != null ? '/circuits/' + circuit.number : null},
-                  hx-target=${circuit == null ? '#modal-container' : '#table-container'}"
+                  hx-target='#modal-container'"
           hx-swap="innerHTML"
           class="flex flex-col flex-1 min-h-0">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -73,7 +73,7 @@
         <div th:if="${circuit != null}" class="contents">
           <div th:replace="~{fragments/confirm-delete :: confirm-delete(
               deleteUrl=${'/circuits/' + circuit.number},
-              hxTarget='#table-container',
+              hxTarget='#modal-container',
               hxInclude='.circuit-filter',
               label=${'o circuito ' + circuit.number})}">
           </div>

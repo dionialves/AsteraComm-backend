@@ -121,12 +121,13 @@ public class CircuitViewController {
             circuitService.update(number, new CircuitCreateDTO(password, trunkName, customerId, planId, active));
             model.addAttribute("toastMsg", "Circuito " + number + " atualizado com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
         } catch (Exception e) {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
+        model.addAttribute("circuit", circuitRepository.findByNumberForModal(number).orElse(null));
+        return "pages/circuits/modal :: modal";
     }
 
     @DeleteMapping("/{number}")
@@ -135,12 +136,15 @@ public class CircuitViewController {
             circuitService.delete(number);
             model.addAttribute("toastMsg", "Circuito " + number + " removido com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
+            model.addAttribute("tableUrl", "/circuits/table");
+            return "fragments/modal-close :: close";
         } catch (Exception e) {
+            model.addAttribute("circuit", circuitRepository.findByNumberForModal(number).orElse(null));
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
+            return "pages/circuits/modal :: modal";
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
     }
 
     // ── DID link/unlink ───────────────────────────────────────────────────────

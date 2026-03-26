@@ -134,12 +134,16 @@ public class PlanViewController {
                     Boolean.TRUE.equals(active)));
             model.addAttribute("toastMsg", "Plano atualizado com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
         } catch (Exception e) {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
+        Plan plan = planService.findById(id).orElse(null);
+        model.addAttribute("plan", plan);
+        model.addAttribute("packageTypes", PackageType.values());
+        if (plan != null) model.addAttribute("packageType", plan.getPackageType());
+        return "pages/plans/modal :: modal";
     }
 
     @DeleteMapping("/{id}")
@@ -148,12 +152,18 @@ public class PlanViewController {
             planService.delete(id);
             model.addAttribute("toastMsg", "Plano removido com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
+            model.addAttribute("tableUrl", "/plans/table");
+            return "fragments/modal-close :: close";
         } catch (Exception e) {
+            Plan plan = planService.findById(id).orElse(null);
+            model.addAttribute("plan", plan);
+            model.addAttribute("packageTypes", PackageType.values());
+            if (plan != null) model.addAttribute("packageType", plan.getPackageType());
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
+            return "pages/plans/modal :: modal";
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

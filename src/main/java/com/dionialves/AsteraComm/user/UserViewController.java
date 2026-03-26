@@ -86,12 +86,13 @@ public class UserViewController {
             userService.update(id, new UserUpdateDTO(name, Boolean.TRUE.equals(enabled)));
             model.addAttribute("toastMsg", "Usuário atualizado com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
         } catch (Exception e) {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
+        model.addAttribute("user", userService.findById(id));
+        return "pages/users/modal :: modal";
     }
 
     @DeleteMapping("/{id}")
@@ -100,12 +101,15 @@ public class UserViewController {
             userService.delete(id);
             model.addAttribute("toastMsg", "Usuário removido com sucesso.");
             model.addAttribute("toastType", "success");
+            model.addAttribute("refreshTable", true);
+            model.addAttribute("tableUrl", "/users/table");
+            return "fragments/modal-close :: close";
         } catch (Exception e) {
+            model.addAttribute("user", userService.findById(id));
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
+            return "pages/users/modal :: modal";
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
     }
 
     @PostMapping("/{id}/reset-password")
@@ -122,8 +126,8 @@ public class UserViewController {
             model.addAttribute("toastMsg", e.getMessage());
             model.addAttribute("toastType", "error");
         }
-        model.addAttribute("clearModal", true);
-        return tableFullResponse(model);
+        model.addAttribute("user", userService.findById(id));
+        return "pages/users/modal :: modal";
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
